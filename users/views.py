@@ -1,10 +1,28 @@
+from django.contrib.auth import authenticate
+from django.core.mail import send_mail
+
+#REST_FRAMEWORK
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import generics, status
-from django.core.mail import send_mail
+from rest_framework.permissions import IsAuthenticated
 
+#SERIALIZERS
 from .serializers import ContactFormSerializer
 
+
+class LoginView(generics.GenericAPIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            return Response({'error':'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        return Response({'message':'Successfully logged in'}, status=status.HTTP_200_OK)
+        
 
 class ContactFormView(generics.GenericAPIView):   
     serializer_class = ContactFormSerializer

@@ -8,16 +8,19 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 
 #SERIALIZERS
-from .serializers import ContactFormSerializer
-
+from .serializers import (
+    ContactFormSerializer,
+    LoginSerializer,
+)
 
 class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
 
-        user = authenticate(username=username, password=password)
-
+        user = authenticate(**serializer.validated_data)
         if user is None:
             return Response({'error':'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
         

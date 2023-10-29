@@ -1,56 +1,50 @@
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
+from .models import User
 
 #REST_FRAMEWORK
+from rest_framework.views import APIView
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
 
 #SERIALIZERS
 from .serializers import (
     ContactFormSerializer,
-    LoginSerializer,
-    RegistrationSerializer,
+    UserRegisterSerializer,
+    UserDetailSerializer
 )
 
-class LoginView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
+class RegistrationView(APIView):
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = UserRegisterSerializer(data=self.request.data)
 
         if serializer.is_valid(raise_exception=True):
-            user = authenticate(**serializer.validated_data)
-            if user is None:
-                return Response({'error':'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
-            
-            return Response({'message':'Successfully logged in'}, status=status.HTTP_200_OK)
+            serializer.save()
+            return Response(serializer.data)
         
-class RegistrationView(generics.GenericAPIView):
-    serializer_class = RegistrationSerializer
-    def post(self,request):
-        serializer = self.get_serializer(data=request.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#NOT DONE
+class UserDetailView(APIView):
+    serializer_class = UserDetailSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=self.request.data)
 
         if serializer.is_valid(raise_exception=True):
-            user = serializer.create()
-
-            return Response({
-                'message': 'Successfully registered user',
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                }
-            })
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ContactFormView(generics.GenericAPIView):   
     serializer_class = ContactFormSerializer
+    throttle_scope = "send_mail"
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=self.request.data)
 
         if serializer.is_valid(raise_exception=True):
             name = serializer.validated_data['name']
@@ -65,7 +59,7 @@ class ContactFormView(generics.GenericAPIView):
                 email,
                 ['laddergatherit@gmail.com']
             )
-
+            
             # Return a successful response
             return Response({"message": "Message sent successfully!"}, status=status.HTTP_201_CREATED)
 

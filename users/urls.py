@@ -1,12 +1,13 @@
 from django.urls import path
 from .views import (
     ContactFormView,
-    LoginView,
-    RegistrationView
+    RegistrationView,
+    UserDetailView
 )
 
 urlpatterns = [
     path("",ContactFormView.as_view(), name="contact-form"),
-    path('login/',LoginView.as_view(), name="login"),
     path('register/',RegistrationView.as_view(), name="register"),
+    path('user_detail/',UserDetailView.as_view(), name="user-detail"),
+
 ]

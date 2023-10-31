@@ -26,9 +26,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY ="django-insecure-z-^)akz0-d^noh*(glg@9y6$d23!)wrkkhp)-i$@(wtgsqcrpm"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','Akikoko.pythonanywhere.com']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -146,6 +146,7 @@ REST_FRAMEWORK = {
     #AUTHENTICATION AND PERMISSIONS
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -167,5 +168,15 @@ SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'authentication.serializers.MyTokenObtainPairSerializer',
 }
 
+#CORS-HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+#SEND MAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'fika61ts@gmail.com'
+EMAIL_HOST_PASSWORD = 'ebswlkuzoomfmhrd'

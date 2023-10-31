@@ -40,11 +40,13 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     #USER ENDPOINTS
-    path("api/contact/", include("users.urls")),
-    path('api/users/',include("users.urls")),
+    path('api/user/',include("users.urls")),
+    
     #AUTHENTICATION
     path('api/auth/', include("authentication.urls")),
     
+    #MISSION ENDPOINTS
+    path('api/mission/', include("missions.urls")),
 
     #API DOCUMENTATION UI
     path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

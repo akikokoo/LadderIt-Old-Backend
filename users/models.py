@@ -7,6 +7,8 @@ class User(AbstractUser):
     password = models.CharField(max_length=255)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    lastMissionDeletionDate = models.DateTimeField(null=True, blank=True)
+    timeZone = models.CharField(max_length=5)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import Mission
+from .models import Mission
 
 class MissionCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,8 +9,6 @@ class MissionCreateSerializer(serializers.ModelSerializer):
             "title"
         ]
     
-    def create(self, validated_data):
-        return Mission(**validated_data)
 
 class MissionIsCompletedSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +18,11 @@ class MissionIsCompletedSerializer(serializers.ModelSerializer):
             "title",
             "description"
         ]
+
+class MissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mission
+        fields = ["id", "title", "numberOfDays", "isCompleted"]
 # class PersonListSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Person

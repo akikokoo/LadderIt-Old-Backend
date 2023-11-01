@@ -15,20 +15,5 @@ class MissionIsCompletedSerializer(serializers.ModelSerializer):
         model = Mission
         fields = [
             "user_id",
-            "title",
-            "description"
+            "title"
         ]
-
-class MissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Mission
-        fields = ["id", "title", "numberOfDays", "isCompleted"]
-# class PersonListSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Person
-#         fields = ('foo', 'bar',)
-
-#     def to_representation(self, instance):
-#         data = super(PersonListSerializer, self).to_representation(instance)
-#         data.update(...)
-#         return data

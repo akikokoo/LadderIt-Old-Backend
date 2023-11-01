@@ -52,13 +52,16 @@ class MissionDeleteView(generics.DestroyAPIView):
     
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
-        mission_id = self.kwargs['pk']
+        mission_id = self.kwargs.get('pk')
+        
+        try:
+            mission = missions.get(id=mission_id)
+            mission.delete()
 
-        mission = missions.get(mission_id=mission_id)
-
-        mission.delete()
-
-        return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_204_NO_CONTENT)
+        
+        except:
+            return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 #NOT DONE(TOKEN AND NFT MINTING?) (urlde mission_id olmalı mı??)
@@ -72,11 +75,11 @@ class MissionCompleteView(generics.GenericAPIView):
 
         return missions
     
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
-        mission_id = self.request.data["mission_id"]
+        mission_id = self.kwargs['pk']
 
         for mission in missions:
             if mission.id == mission_id:
@@ -84,26 +87,42 @@ class MissionCompleteView(generics.GenericAPIView):
         
         # If the given mission_id exists.
         if specified_mission:
-            nextMissionCompletionDate = datetime.datetime(year=user.lastMissionDeletionDate.year, month=user.lastMissionDeletionDate.month, day=user.lastMissionDeletionDate.day+1, hour=0, second=0)
-            # Previous completion of that mission should not be in the same day with this completion request
-            if nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
-                specified_mission.isCompleted = True
-                specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
-                specified_mission.numberOfDays += 1
-            
-                serializer = MissionIsCompletedSerializer(specified_mission, many=True)
 
-                # If it is not the day 1, mint token
-                if specified_mission.numberOfDays != 1:
+             # numberOfDays is not 0
+            if specified_mission.prevDate:
+                nextMissionCompletionDate = datetime.datetime(year=specified_mission.prevDate.year, month=specified_mission.prevDate.month, day=specified_mission.prevDate.day+1, hour=0, second=0)
+                
+                # User skipped one or more day for the mission completion
+                if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3")) - nextMissionCompletionDate:
+                    return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Previous completion of that mission should not be in the same day with this completion request
+                elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3")):
+                    specified_mission.isCompleted = True
+                    specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3"))
+                    specified_mission.numberOfDays += 1
+                
+                    serializer = MissionIsCompletedSerializer(specified_mission)
+
                     #mint_token(mission) TOKEN MINTING
                     return Response(serializer.data)
                 
+                # There is a previous completion on that day
                 else:
-                    return Response(serializer.data)
-            
+                    return Response({'message':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            #numberOfDays is 0, because prevDate does not exist.
             else:
-                return Response({'message':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
+                specified_mission.isCompleted = True
+                specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3"))
+                specified_mission.numberOfDays += 1
+                
+                specified_mission.save()
+                serializer = MissionIsCompletedSerializer(specified_mission)
 
+                return Response(serializer.data)
+            
+        # given mission_id does not exist
         else:
             return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
         

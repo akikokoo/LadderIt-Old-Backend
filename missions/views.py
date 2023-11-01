@@ -93,13 +93,13 @@ class MissionCompleteView(generics.GenericAPIView):
                 nextMissionCompletionDate = datetime.datetime(year=specified_mission.prevDate.year, month=specified_mission.prevDate.month, day=specified_mission.prevDate.day+1, hour=0, second=0)
                 
                 # User skipped one or more day for the mission completion
-                if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3")) - nextMissionCompletionDate:
+                if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 # Previous completion of that mission should not be in the same day with this completion request
-                elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3")):
+                elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
                     specified_mission.isCompleted = True
-                    specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3"))
+                    specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
                     specified_mission.numberOfDays += 1
                 
                     serializer = MissionIsCompletedSerializer(specified_mission)
@@ -114,7 +114,7 @@ class MissionCompleteView(generics.GenericAPIView):
             #numberOfDays is 0, because prevDate does not exist.
             else:
                 specified_mission.isCompleted = True
-                specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int("+3"))
+                specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
                 specified_mission.numberOfDays += 1
                 
                 specified_mission.save()

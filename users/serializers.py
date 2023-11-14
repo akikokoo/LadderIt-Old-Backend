@@ -30,4 +30,4 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
-        fields = ["id", "title", "numberOfDays", "isCompleted"]
+        fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted"]

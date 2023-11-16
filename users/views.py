@@ -8,12 +8,18 @@ from rest_framework.views import APIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+#SWAGGER
+from drf_yasg.utils import swagger_auto_schema
 
 #SERIALIZERS
 from .serializers import (
     ContactFormSerializer,
     UserRegisterSerializer,
     UserDetailSerializer,
+    ProfileUpdateSerializer
 )
 
 
@@ -34,6 +40,8 @@ class RegistrationView(generics.CreateAPIView):
 
 
 class UserDetailView(generics.ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = UserDetailSerializer
     
     def get_queryset(self):
@@ -41,6 +49,7 @@ class UserDetailView(generics.ListAPIView):
         missions = Mission.objects.filter(user=user)
 
         return missions
+
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
@@ -54,6 +63,38 @@ class UserDetailView(generics.ListAPIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+    
+
+class ProfileUpdateView(generics.GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileUpdateSerializer
+
+    def patch(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        user = User.objects.get(id=user_id)
+
+        serializer = self.get_serializer(instance=user, data=request.data, partial=True)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            return Response({"message":"User profile updated succesfully!"}, status=status.HTTP_200_OK)
+        
+        else:
+            # Return an error response
+            return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(ProfileUpdateView, cls).as_view(**initkwargs)
+        
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body=ProfileUpdateSerializer, method="post")
+
+        return view
+
 
 
 class ContactFormView(generics.GenericAPIView):  

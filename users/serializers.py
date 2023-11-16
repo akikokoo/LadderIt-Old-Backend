@@ -27,7 +27,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return instance
     
 
+
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
         fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted"]
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["username","email"]

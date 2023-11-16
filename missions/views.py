@@ -6,19 +6,24 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+#SWAGGER
+from drf_yasg.utils import swagger_auto_schema
+
 #SERIALIZERS
 from .serializers import (
-    MissionIsCompletedSerializer,
     MissionCreateSerializer,
+    MissionCompletedSerializer,
+    UserSerializer
 )
 
 #OTHER LIBRARIES
 import datetime
 
-#DONE
+
 class MissionCreateView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class=MissionCreateSerializer
 
     def post(self, request):
         user_id = self.request.user.id
@@ -32,11 +37,22 @@ class MissionCreateView(generics.GenericAPIView):
         data = self.request.data
         data["user"] = user.id
 
-        serializer = MissionCreateSerializer(data=data)
+        serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(MissionCreateView, cls).as_view(**initkwargs)
+        
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body=MissionCreateSerializer, method="post")
+
+        return view
+    
 
 
 class MissionDeleteView(generics.DestroyAPIView):
@@ -45,52 +61,70 @@ class MissionDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        mission = Mission.objects.filter(user=user)
+        missions = Mission.objects.filter(user=user)
 
-        return mission
+        return missions
     
-    
+    def perform_destroy(self, instance):
+        user_id = self.request.user.id
+        user = User.objects.get(id=user_id)
+
+        deletionTime = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+        user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
+        
+        if user_serializer.is_valid(raise_exception=True):
+            user_serializer.save()
+
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
         mission_id = self.kwargs.get('pk')
-        
+
         try:
             mission = missions.get(id=mission_id)
-            mission.delete()
+            self.perform_destroy(mission)
+
 
             return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_204_NO_CONTENT)
         
         except:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(MissionDeleteView, cls).as_view(**initkwargs)
+        
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body = None, method="delete")
 
-#NOT DONE(TOKEN AND NFT MINTING?) (urlde mission_id olmalı mı??)
+        return view
+
+
+#NOT DONE(TOKEN AND NFT MINTING?)
 class MissionCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    
+    serializer_class = None
     def get_queryset(self):
         user = self.request.user
         missions = Mission.objects.filter(user=user)
 
         return missions
     
-    def post(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
 
-        for mission in missions:
-            if mission.id == mission_id:
-                specified_mission = mission
         
-        # If the given mission_id exists.
-        if specified_mission:
+
+        try:
+            mission = missions.get(id=mission_id)
 
              # numberOfDays is not 0
-            if specified_mission.prevDate:
-                nextMissionCompletionDate = datetime.datetime(year=specified_mission.prevDate.year, month=specified_mission.prevDate.month, day=specified_mission.prevDate.day+1, hour=0, second=0)
+            if mission.prevDate:
+                nextMissionCompletionDate = datetime.datetime(year=mission.prevDate.year, month=mission.prevDate.month, day=mission.prevDate.day+1, hour=0, second=0)
                 
                 # User skipped one or more day for the mission completion
                 if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
@@ -98,14 +132,16 @@ class MissionCompleteView(generics.GenericAPIView):
                 
                 # Previous completion of that mission should not be in the same day with this completion request
                 elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
-                    specified_mission.isCompleted = True
-                    specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
-                    specified_mission.numberOfDays += 1
-                
-                    serializer = MissionIsCompletedSerializer(specified_mission)
+                    mission.isCompleted = True
+                    mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+                    mission.numberOfDays += 1
 
-                    #mint_token(mission) TOKEN MINTING
-                    return Response(serializer.data)
+                    serializer = MissionCompletedSerializer(mission)
+
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                        #mint_token(mission) TOKEN MINTING
+                        return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
                 
                 # There is a previous completion on that day
                 else:
@@ -113,18 +149,32 @@ class MissionCompleteView(generics.GenericAPIView):
                 
             #numberOfDays is 0, because prevDate does not exist.
             else:
-                specified_mission.isCompleted = True
-                specified_mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
-                specified_mission.numberOfDays += 1
+                mission.isCompleted = True
+                mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+                mission.numberOfDays += 1
                 
-                specified_mission.save()
-                serializer = MissionIsCompletedSerializer(specified_mission)
+                serializer = MissionCompletedSerializer(mission)
 
-                return Response(serializer.data)
+                if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    #mint_token(mission) TOKEN MINTING
+                    return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)                
+
+                return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
             
         # given mission_id does not exist
-        else:
+        except:
             return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(MissionCompleteView, cls).as_view(**initkwargs)
+        
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body=None, method="post")
+
+        return view
         
         
         

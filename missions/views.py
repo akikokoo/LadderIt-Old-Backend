@@ -89,8 +89,8 @@ class MissionDeleteView(generics.DestroyAPIView):
         
         except Mission.DoesNotExist:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"message": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @classmethod
     def as_view(cls, **initkwargs):
@@ -165,8 +165,8 @@ class MissionCompleteView(generics.GenericAPIView):
         except Mission.DoesNotExist:
             return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
         
-        except:
-            return Response({"message": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @classmethod
     def as_view(cls, **initkwargs):

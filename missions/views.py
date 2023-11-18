@@ -120,7 +120,6 @@ class MissionCompleteView(generics.GenericAPIView):
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
-        print(mission_id + "mission_id")
         try:
             mission = missions.get(id=mission_id)
 
@@ -167,7 +166,7 @@ class MissionCompleteView(generics.GenericAPIView):
             return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": str(e) + f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @classmethod
     def as_view(cls, **initkwargs):

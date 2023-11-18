@@ -162,11 +162,10 @@ class MissionCompleteView(generics.GenericAPIView):
                     return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
             
         # given mission_id does not exist
-        except Mission.DoesNotExist:
-            return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"message":f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        except Exception as e:
-            return Response({"message": str(e) + f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     
     @classmethod
     def as_view(cls, **initkwargs):

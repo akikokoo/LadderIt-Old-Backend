@@ -60,7 +60,7 @@ class MissionDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = int(self.request.user)
         missions = Mission.objects.filter(user=user)
 
         return missions
@@ -109,7 +109,7 @@ class MissionCompleteView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = int(self.request.user)
         missions = Mission.objects.filter(user=user)
 
         return missions

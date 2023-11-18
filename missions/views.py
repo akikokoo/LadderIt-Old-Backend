@@ -120,7 +120,8 @@ class MissionCompleteView(generics.GenericAPIView):
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
-        try:
+
+        if mission_id:
             mission = missions.get(id=mission_id)
 
              # numberOfDays is not 0
@@ -160,12 +161,9 @@ class MissionCompleteView(generics.GenericAPIView):
                     serializer.save()
                     #mint_token(mission) TOKEN MINTING
                     return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
-            
-        # given mission_id does not exist
-        except:
-            return Response({"message":f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
+        else:
+            return Response({'message':f'mission id is: {mission_id}'}, status=status.HTTP_400_BAD_REQUEST)
+    
     
     @classmethod
     def as_view(cls, **initkwargs):

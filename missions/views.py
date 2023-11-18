@@ -60,8 +60,8 @@ class MissionDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user.id
-        missions = Mission.objects.filter(user__pk=user)
+        user = self.request.user
+        missions = Mission.objects.filter(user=user)
 
         return missions
     
@@ -81,7 +81,9 @@ class MissionDeleteView(generics.DestroyAPIView):
         mission_id = self.kwargs.get('pk')
 
         try:
+            mission_id = int(mission_id)
             mission = missions.get(id=mission_id)
+            
             self.perform_destroy(mission)
 
 
@@ -107,10 +109,11 @@ class MissionDeleteView(generics.DestroyAPIView):
 class MissionCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class = MissionCompletedSerializer
 
     def get_queryset(self):
-        user = self.request.user.id
-        missions = Mission.objects.filter(user__pk=user)
+        user = self.request.user
+        missions = Mission.objects.filter(user=user)
 
         return missions
     
@@ -121,6 +124,7 @@ class MissionCompleteView(generics.GenericAPIView):
         mission_id = self.kwargs['pk']
 
         try:
+            mission_id = int(mission_id)
             mission = missions.get(id=mission_id)
 
              # numberOfDays is not 0
@@ -137,7 +141,7 @@ class MissionCompleteView(generics.GenericAPIView):
                     mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
                     mission.numberOfDays += 1
 
-                    serializer = MissionCompletedSerializer(mission)
+                    serializer = self.get_serializer(mission)
 
                     if serializer.is_valid(raise_exception=True):
                         serializer.save()

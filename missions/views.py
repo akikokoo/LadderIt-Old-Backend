@@ -81,9 +81,7 @@ class MissionDeleteView(generics.DestroyAPIView):
         mission_id = self.kwargs.get('pk')
 
         try:
-            mission_id = int(mission_id)
             mission = missions.get(id=mission_id)
-            
             self.perform_destroy(mission)
 
 
@@ -122,9 +120,8 @@ class MissionCompleteView(generics.GenericAPIView):
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
-
+        print(mission_id + "mission_id")
         try:
-            mission_id = int(mission_id)
             mission = missions.get(id=mission_id)
 
              # numberOfDays is not 0

@@ -74,6 +74,7 @@ class MissionDeleteView(generics.DestroyAPIView):
         
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.save()
+            instance.delete()
 
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
@@ -86,8 +87,10 @@ class MissionDeleteView(generics.DestroyAPIView):
 
             return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_204_NO_CONTENT)
         
-        except:
+        except Mission.DoesNotExist:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"message": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
 
     @classmethod
     def as_view(cls, **initkwargs):
@@ -104,7 +107,7 @@ class MissionDeleteView(generics.DestroyAPIView):
 class MissionCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = None
+
     def get_queryset(self):
         user = self.request.user
         missions = Mission.objects.filter(user=user)
@@ -117,8 +120,6 @@ class MissionCompleteView(generics.GenericAPIView):
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
 
-        
-
         try:
             mission = missions.get(id=mission_id)
 
@@ -130,7 +131,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
-                # Previous completion of that mission should not be in the same day with this completion request
+                # Previous completion of that mission is not in the same day with this completion request
                 elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
                     mission.isCompleted = True
                     mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
@@ -158,13 +159,14 @@ class MissionCompleteView(generics.GenericAPIView):
                 if serializer.is_valid(raise_exception=True):
                     serializer.save()
                     #mint_token(mission) TOKEN MINTING
-                    return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)                
-
-                return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
+                    return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
             
         # given mission_id does not exist
-        except:
+        except Mission.DoesNotExist:
             return Response({"message": "Mission not found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except:
+            return Response({"message": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
     
     @classmethod
     def as_view(cls, **initkwargs):

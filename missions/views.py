@@ -61,7 +61,7 @@ class MissionDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        missions = Mission.objects.filter(user__id=user)
+        missions = Mission.objects.filter(user__pk=user)
 
         return missions
     
@@ -110,7 +110,7 @@ class MissionCompleteView(generics.GenericAPIView):
 
     def get_queryset(self):
         user = self.request.user.id
-        missions = Mission.objects.filter(user__id=user)
+        missions = Mission.objects.filter(user__pk=user)
 
         return missions
     

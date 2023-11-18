@@ -92,6 +92,7 @@ class MissionDeleteView(generics.DestroyAPIView):
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
     @classmethod
     def as_view(cls, **initkwargs):
         view = super(MissionDeleteView, cls).as_view(**initkwargs)
@@ -107,7 +108,6 @@ class MissionDeleteView(generics.DestroyAPIView):
 class MissionCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = MissionCompletedSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -121,7 +121,7 @@ class MissionCompleteView(generics.GenericAPIView):
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
 
-        if mission_id:
+        try:
             mission = missions.get(id=mission_id)
 
              # numberOfDays is not 0
@@ -138,12 +138,9 @@ class MissionCompleteView(generics.GenericAPIView):
                     mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
                     mission.numberOfDays += 1
 
-                    serializer = self.get_serializer(mission)
+                    mission.save()
 
-                    if serializer.is_valid(raise_exception=True):
-                        serializer.save()
-                        #mint_token(mission) TOKEN MINTING
-                        return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
+                    return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
                 
                 # There is a previous completion on that day
                 else:
@@ -155,14 +152,14 @@ class MissionCompleteView(generics.GenericAPIView):
                 mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
                 mission.numberOfDays += 1
                 
-                serializer = MissionCompletedSerializer(mission)
-
-                if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-                    #mint_token(mission) TOKEN MINTING
-                    return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message':f'mission id is: {mission_id}'}, status=status.HTTP_400_BAD_REQUEST)
+                mission.save()
+                #mint_token(mission) TOKEN MINTING
+                
+                return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
+            
+        # given mission_id does not exist
+        except:
+            return Response({"message":f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     @classmethod

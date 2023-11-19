@@ -17,7 +17,7 @@ from .serializers import (
 )
 
 #OTHER LIBRARIES
-import datetime
+from datetime import timedelta, datetime, timezone
 
 
 class MissionCreateView(generics.GenericAPIView):
@@ -31,7 +31,7 @@ class MissionCreateView(generics.GenericAPIView):
 
         if user.lastMissionDeletionDate:
             nextMissionCreationDate = user.lastMissionDeletionDate + datetime.timedelta(days=1)
-            if nextMissionCreationDate > datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
+            if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + datetime.timedelta(hours=int(user.timeZone)):
                 return Response({'message': 'Cannot create a mission'}, status=status.HTTP_400_BAD_REQUEST)
 
         data = self.request.data
@@ -69,7 +69,7 @@ class MissionDeleteView(generics.DestroyAPIView):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
 
-        deletionTime = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + datetime.timedelta(hours=int(user.timeZone))
         user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
         
         if user_serializer.is_valid(raise_exception=True):

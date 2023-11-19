@@ -89,8 +89,8 @@ class MissionDeleteView(generics.DestroyAPIView):
         
         except Mission.DoesNotExist:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except:
+            return Response({"message": "An errors has occurred."}, status=status.HTTP_400_BAD_REQUEST)
 
 
     @classmethod

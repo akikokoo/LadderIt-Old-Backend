@@ -135,7 +135,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 # Previous completion of that mission is not in the same day with this completion request
                 elif nextMissionCompletionDate <= datetime.utcnow() + timedelta(hours=int(user.timeZone)):
                     mission.isCompleted = True
-                    mission.prevDate = datetime.utcnow() + timedelta(hours=int(user.timeZone))
+                    mission.prevDate = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
                     mission.numberOfDays += 1
 
                     mission.save()
@@ -149,7 +149,7 @@ class MissionCompleteView(generics.GenericAPIView):
             #numberOfDays is 0, because prevDate does not exist.
             else:
                 mission.isCompleted = True
-                mission.prevDate = datetime.utcnow() + timedelta(hours=int(user.timeZone))
+                mission.prevDate = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
                 mission.numberOfDays += 1
                 
                 mission.save()

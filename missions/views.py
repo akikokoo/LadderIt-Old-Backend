@@ -30,8 +30,8 @@ class MissionCreateView(generics.GenericAPIView):
         user = User.objects.get(id=user_id)
 
         if user.lastMissionDeletionDate:
-            nextMissionCreationDate = user.lastMissionDeletionDate + datetime.timedelta(days=1)
-            if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + datetime.timedelta(hours=int(user.timeZone)):
+            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
+            if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):
                 return Response({'message': 'Cannot create a mission'}, status=status.HTTP_400_BAD_REQUEST)
 
         data = self.request.data
@@ -69,7 +69,7 @@ class MissionDeleteView(generics.DestroyAPIView):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
 
-        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + datetime.timedelta(hours=int(user.timeZone))
+        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
         user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
         
         if user_serializer.is_valid(raise_exception=True):
@@ -126,16 +126,16 @@ class MissionCompleteView(generics.GenericAPIView):
 
              # numberOfDays is not 0
             if mission.prevDate:
-                nextMissionCompletionDate = datetime.datetime(year=mission.prevDate.year, month=mission.prevDate.month, day=mission.prevDate.day+1, hour=0, second=0)
+                nextMissionCompletionDate = datetime(year=mission.prevDate.year, month=mission.prevDate.month, day=mission.prevDate.day+1, hour=0, second=0)
                 
                 # User skipped one or more day for the mission completion
-                if datetime.timedelta(days=1) < datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
+                if timedelta(days=1) < datetime.utcnow() + timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 # Previous completion of that mission is not in the same day with this completion request
-                elif nextMissionCompletionDate <= datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone)):
+                elif nextMissionCompletionDate <= datetime.utcnow() + timedelta(hours=int(user.timeZone)):
                     mission.isCompleted = True
-                    mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+                    mission.prevDate = datetime.utcnow() + timedelta(hours=int(user.timeZone))
                     mission.numberOfDays += 1
 
                     mission.save()
@@ -149,7 +149,7 @@ class MissionCompleteView(generics.GenericAPIView):
             #numberOfDays is 0, because prevDate does not exist.
             else:
                 mission.isCompleted = True
-                mission.prevDate = datetime.datetime.utcnow() + datetime.timedelta(hours=int(user.timeZone))
+                mission.prevDate = datetime.utcnow() + timedelta(hours=int(user.timeZone))
                 mission.numberOfDays += 1
                 
                 mission.save()

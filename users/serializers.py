@@ -13,7 +13,7 @@ class ContactFormSerializer(serializers.Serializer):
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'timeZone', 'password']
+        fields = ['id', 'username', 'email', 'timeZone', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }

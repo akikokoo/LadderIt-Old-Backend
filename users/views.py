@@ -53,10 +53,9 @@ class MissionListView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         missions = self.get_queryset()
-        serializer = self.get_serializer(missions, many=True)
+        serializer = self.get_serializer(missions, data=None,many=True)
 
-        if serializer.is_valid(raise_exception=True):
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class UserDetailView(generics.ListAPIView):
@@ -70,8 +69,7 @@ class UserDetailView(generics.ListAPIView):
 
         serializer = self.get_serializer(user)
         
-        if serializer.is_valid(raise_exception=True):
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 #--------------------------------------------------------------------------------------------------------
 
 

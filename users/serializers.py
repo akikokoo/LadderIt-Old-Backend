@@ -30,10 +30,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
+        model = User
+        fields = ["id", "username", "email", "timeZone"]
+
+class MissionListSerializer(serializers.ModelSerializer):
+    class Meta:
         model = Mission
         fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted"]
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username","email"]
+        fields = ["username"]

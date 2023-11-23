@@ -19,7 +19,8 @@ from .serializers import (
     ContactFormSerializer,
     UserRegisterSerializer,
     UserDetailSerializer,
-    ProfileUpdateSerializer
+    ProfileUpdateSerializer,
+    MissionListSerializer
 )
 
 
@@ -38,11 +39,11 @@ class RegistrationView(generics.CreateAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class UserDetailView(generics.ListAPIView):
+#--------------------------------------------------------------------------------------------------------
+class MissionListView(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    serializer_class = UserDetailSerializer
+    serializer_class = MissionListSerializer
     
     def get_queryset(self):
         user = self.request.user
@@ -50,20 +51,29 @@ class UserDetailView(generics.ListAPIView):
 
         return missions
 
-
     def get(self, request, *args, **kwargs):
-        user = self.request.user
-
         missions = self.get_queryset()
         serializer = self.get_serializer(missions, many=True)
 
-        response_data = {
-            'username': user.username,
-            'missions': serializer.data
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.data, status=status.HTTP_200_OK)
     
+
+class UserDetailView(generics.ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserDetailSerializer
+    
+    def get(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        user = User.objects.get(id=user_id)
+
+        serializer = self.get_serializer(user)
+        
+        if serializer.is_valid(raise_exception=True):
+            return Response(serializer.data, status=status.HTTP_200_OK)
+#--------------------------------------------------------------------------------------------------------
+
 
 class ProfileUpdateView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
@@ -74,7 +84,7 @@ class ProfileUpdateView(generics.GenericAPIView):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
 
-        serializer = self.get_serializer(instance=user, data=request.data, partial=True)
+        serializer = self.get_serializer(instance=user, data=request.data)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()

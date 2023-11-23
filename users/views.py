@@ -53,7 +53,7 @@ class MissionListView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         missions = self.get_queryset()
-        serializer = self.get_serializer(missions, data=None,many=True)
+        serializer = self.get_serializer(missions,many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
     

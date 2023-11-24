@@ -87,7 +87,7 @@ class ProfileUpdateView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
-            return Response({"message":"User profile updated succesfully!"}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         else:
             # Return an error response

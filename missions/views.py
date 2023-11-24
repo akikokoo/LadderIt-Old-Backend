@@ -30,9 +30,10 @@ class MissionCreateView(generics.GenericAPIView):
         user = User.objects.get(id=user_id)
 
         if user.lastMissionDeletionDate:
-            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
+            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(minutes=1)
             if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):
-                return Response({'message': 'Cannot create a mission'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         data = self.request.data
         data["user"] = user.id

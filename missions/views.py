@@ -67,15 +67,18 @@ class MissionDeleteView(generics.DestroyAPIView):
         return missions
     
     def perform_destroy(self, instance):
-        user_id = self.request.user.id
-        user = User.objects.get(id=user_id)
+        try:
+            user_id = self.request.user.id
+            user = User.objects.get(id=user_id)
 
-        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
-        user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
-        
-        if user_serializer.is_valid(raise_exception=True):
-            user_serializer.save()
-            instance.delete()
+            deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+            user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
+            
+            if user_serializer.is_valid(raise_exception=True):
+                user_serializer.save()
+                instance.delete()
+        except Exception as e:
+            return Response({"message":f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
@@ -90,8 +93,8 @@ class MissionDeleteView(generics.DestroyAPIView):
         
         except Mission.DoesNotExist:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"message": "An errors has occurred."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"message": f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
     @classmethod

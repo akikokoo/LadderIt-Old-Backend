@@ -12,7 +12,6 @@ from drf_yasg.utils import swagger_auto_schema
 #SERIALIZERS
 from .serializers import (
     MissionCreateSerializer,
-    MissionCompletedSerializer,
     UserSerializer
 )
 
@@ -67,18 +66,15 @@ class MissionDeleteView(generics.DestroyAPIView):
         return missions
     
     def perform_destroy(self, instance):
-        try:
-            user_id = self.request.user.id
-            user = User.objects.get(id=user_id)
+        user_id = self.request.user.id
+        user = User.objects.get(id=user_id)
 
-            deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
-            user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
-            
-            if user_serializer.is_valid(raise_exception=True):
-                user_serializer.save()
-                instance.delete()
-        except Exception as e:
-            return Response({"message":f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+        user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
+        
+        if user_serializer.is_valid(raise_exception=True):
+            user_serializer.save()
+            instance.delete()
 
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
@@ -89,7 +85,7 @@ class MissionDeleteView(generics.DestroyAPIView):
             self.perform_destroy(mission)
 
 
-            return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_200_OK)
         
         except Mission.DoesNotExist:
             return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)

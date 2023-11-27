@@ -18,8 +18,4 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['lastMissionDeletionDate']
 
 
-class MissionCompletedSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Mission
-        fields = "__all__"
 

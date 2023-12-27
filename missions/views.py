@@ -28,17 +28,24 @@ class MissionCreateView(generics.GenericAPIView):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
 
+        # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
             nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(minutes=1)
+            
+            # Next mission creation date is one day after the last mission deletion date
+            # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
             if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):
-                return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, status=status.HTTP_400_BAD_REQUEST)
-
+                return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
+                                status=status.HTTP_400_BAD_REQUEST)
 
         data = self.request.data
-        data["user"] = user.id
+
+        # Request data itself is a querydict and it's immutable so we need to make it mutable object to make a change in it.
+        mutable_data = dict(data)
+        mutable_data["user"] = user.id
 
         serializer = self.get_serializer(data=data)
-
+        
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -68,7 +75,6 @@ class MissionDeleteView(generics.DestroyAPIView):
     def perform_destroy(self, instance):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
-
         deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
         user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
         
@@ -83,12 +89,8 @@ class MissionDeleteView(generics.DestroyAPIView):
         try:
             mission = missions.get(id=mission_id)
             self.perform_destroy(mission)
-
-
             return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_200_OK)
         
-        except Mission.DoesNotExist:
-            return Response({"message": "Mission does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"message": f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -124,12 +126,23 @@ class MissionCompleteView(generics.GenericAPIView):
         try:
             mission = missions.get(id=mission_id)
 
-             # numberOfDays is not 0
+            # numberOfDays is not 0
             if mission.prevDate:
-                nextMissionCompletionDate = datetime(year=mission.prevDate.year, month=mission.prevDate.month, day=mission.prevDate.day+1, hour=0, second=0)
-                
+                nextMissionCompletionDate = datetime(year=mission.prevDate.year,
+                                                    month=mission.prevDate.month,
+                                                    day=mission.prevDate.day+1,
+                                                    hour=0,
+                                                    minute=0,
+                                                    second=0,
+                                                    microsecond=0,
+                                                    tzinfo=timezone.utc).replace(tzinfo=None)
+                # print(mission.prevDate)
+                # print(nextMissionCompletionDate)
+                # print(datetime.utcnow() + timedelta(hours=int(user.timeZone)))
+                # print(nextMissionCompletionDate - (datetime.utcnow() + timedelta(hours=int(user.timeZone))))
                 # User skipped one or more day for the mission completion
-                if timedelta(days=1) < datetime.utcnow() + timedelta(hours=int(user.timeZone)) - nextMissionCompletionDate:
+                if timedelta(days=1) < (nextMissionCompletionDate - (datetime.utcnow() + timedelta(hours=int(user.timeZone)))):
+                    mission.delete() #does that actually deletes the mission?
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 # Previous completion of that mission is not in the same day with this completion request
@@ -143,23 +156,26 @@ class MissionCompleteView(generics.GenericAPIView):
                     return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
                 
                 # There is a previous completion on that day
-                else:
+                elif mission.isCompleted == True:
                     return Response({'message':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
             #numberOfDays is 0, because prevDate does not exist.
             else:
+                
                 mission.isCompleted = True
                 mission.prevDate = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
                 mission.numberOfDays += 1
-                
+
                 mission.save()
                 #mint_token(mission) TOKEN MINTING
                 
                 return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
-            
+        
+        except Exception as e:
+            return Response(f"Caught an exception: {e}")
         # given mission_id does not exist
         except:
-            return Response({"message":f"mission_id : {mission_id}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message":"given mission_id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
     
     
     @classmethod
@@ -172,7 +188,25 @@ class MissionCompleteView(generics.GenericAPIView):
 
         return view
         
+class ChangeIsCompleteView(generics.GenericAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = User.objects.get(id = self.request.user.id)
+        #updating every isCompleted to False for every mission for that user
+        Mission.objects.filter(user=user).update(isCompleted=False)
         
+        return Response({"message":"Resetted missions correctly"}, status=status.HTTP_200_OK)
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(ChangeIsCompleteView, cls).as_view(**initkwargs)
         
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body=None, method="patch")
+
+        return view
 
         

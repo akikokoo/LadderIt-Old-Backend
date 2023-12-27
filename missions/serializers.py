@@ -10,12 +10,8 @@ class MissionCreateSerializer(serializers.ModelSerializer):
             "user",
             "title"
         ]
-    
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['lastMissionDeletionDate']
-
-
-

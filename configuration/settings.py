@@ -86,7 +86,7 @@ WSGI_APPLICATION = "configuration.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "database",
+        "NAME": BASE_DIR / "ladderit.database",
     }
 }
 
@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-
+    
     #THROTTLE
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.ScopedRateThrottle",
@@ -161,7 +161,6 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME' : timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(weeks=12),
-    'TOKEN_OBTAIN_SERIALIZER': 'authentication.serializers.MyTokenObtainPairSerializer',
 }
 
 #CORS-HEADERS

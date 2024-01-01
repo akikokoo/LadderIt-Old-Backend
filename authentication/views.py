@@ -5,6 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomTokenObtainPairSerializer
 
+#SWAGGER
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     # Customize the response data if needed
@@ -22,6 +26,22 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response = super().post(request, *args, **kwargs)
         # Customize response data here if needed
         return response
+    
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(CustomTokenObtainPairView, cls).as_view(**initkwargs)
+        
+        # Apply swagger_auto_schema to the post method
+        view.post = swagger_auto_schema(
+            request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                required=['password'],
+                properties={
+                    'password': openapi.Schema(type=openapi.TYPE_STRING),
+                },
+            ), method="post")
+
+        return view
     
 class CustomTokenRefreshView(TokenRefreshView):
     # Customize the response data if needed

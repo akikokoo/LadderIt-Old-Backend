@@ -12,7 +12,6 @@ class MissionsTestCase(APITestCase):
             reverse("register"), #register
             {   
                 "username": "akif",
-                "email": "akif@app.com",
                 "password": "123",
                 "timeZone":"+3",
                 
@@ -21,18 +20,17 @@ class MissionsTestCase(APITestCase):
 
         response = self.client.post(
             reverse("token_obtain_pair"), #login
-            {
-                "username": "akif",
+            {   
                 "password": "123",
             },
         )
         
         try:
-            print(response.data)
+            # print(response.data)
             token = response.data["access"]
             self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
         except Exception as e:
-            print(f"Invalid username or wallet address! {e}")    
+            print(f"{e}")    
 
     def test_mission_creation(self):
         '''

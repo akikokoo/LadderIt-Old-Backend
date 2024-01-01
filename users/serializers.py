@@ -13,17 +13,22 @@ class ContactFormSerializer(serializers.Serializer):
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'timeZone', 'password']
+        fields = ['id', 'username', 'timeZone', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
-    def create(self, validated_data):
-        user = super().create(validated_data)
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
+    # def create(self, validated_data):
+    #     user = super().create(validated_data)
+    #     user.set_password(validated_data['password'])
+    #     user.save()
+    #     return user
     
+    def to_representation(self, instance):
+        # Exclude 'password' field from the serialized data
+        data = super().to_representation(instance)
+        data.pop('password', None)
+        return data
     
 
 

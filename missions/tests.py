@@ -21,6 +21,7 @@ class MissionsTestCase(APITestCase):
         response = self.client.post(
             reverse("token_obtain_pair"), #login
             {   
+                
                 "password": "123",
             },
         )

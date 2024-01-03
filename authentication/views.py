@@ -14,7 +14,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     # Customize the response data if needed
     def post(self, request, *args, **kwargs):
         password = request.data.get('password', None)
-
+        
         if not password:
             return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import RefreshToken
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -12,7 +13,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         if user is None:
             raise serializers.ValidationError("Invalid password")
 
-        refresh = self.get_token(user)
+        refresh = RefreshToken.for_user(user) 
         data = {
             'refresh': str(refresh),
             'access': str(refresh.access_token),

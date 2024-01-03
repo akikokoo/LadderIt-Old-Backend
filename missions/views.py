@@ -40,10 +40,6 @@ class MissionCreateView(generics.GenericAPIView):
 
         data = self.request.data
 
-        # Request data itself is a querydict and it's immutable so we need to make it mutable object to make a change in it.
-        mutable_data = dict(data)
-        mutable_data["user"] = user.id
-
         serializer = self.get_serializer(data=data)
         
         if serializer.is_valid(raise_exception=True):

@@ -6,7 +6,6 @@ class MissionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
         fields = [
-            "id",
             "user",
             "title"
         ]

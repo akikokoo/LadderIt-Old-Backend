@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 from missions.models import Mission
+from django.contrib.auth.hashers import make_password
 
 class ContactFormSerializer(serializers.Serializer):
     gender = serializers.CharField(max_length=10)
@@ -13,15 +14,14 @@ class ContactFormSerializer(serializers.Serializer):
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'timeZone', 'password']
+        fields = ['id', 'username', 'wallet', 'timeZone', 'password']
         extra_kwargs = {
             'password': {'write_only': True}
         }
 
-    # def create(self, validated_data):
-    #     user = super().create(validated_data)
-    #     user.save()
-    #     return user
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super(UserRegisterSerializer, self).create(validated_data)
     
     def to_representation(self, instance):
         # Exclude 'password' field from the serialized data

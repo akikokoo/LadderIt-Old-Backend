@@ -14,15 +14,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     # Customize the response data if needed
     def post(self, request, *args, **kwargs):
         password = request.data.get('password', None)
-        
-        if not password:
-            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        wallet = request.data.get('wallet', None) #wallet address
 
-        user = authenticate(request=request, password=password)
+        if not password:
+            return Response({'error': 'password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(request=request, password=password, wallet=wallet)
 
         if user is None:
-            return Response({'error': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)
-
+            return Response({'error': 'Invalid password or request body'}, status=status.HTTP_401_UNAUTHORIZED)
+        
         response = super().post(request, *args, **kwargs)
         # Customize response data here if needed
         return response
@@ -46,15 +47,15 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     # Customize the response data if needed
     def post(self, request, *args, **kwargs):
-        password = request.data.get('password', None)
+        wallet = request.data.get('wallet', None)
 
-        if not password:
-            return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not wallet:
+            return Response({'error': 'Wallet is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(request=request, password=password)
+        user = authenticate(request=request, wallet=wallet)
 
         if user is None:
-            return Response({'error': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'Invalid wallet address or request body'}, status=status.HTTP_401_UNAUTHORIZED)
 
         response = super().post(request, *args, **kwargs)
         # Customize response data here if needed

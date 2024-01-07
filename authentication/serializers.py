@@ -18,17 +18,20 @@ class PasswordField(serializers.CharField):
 class CustomTokenObtainPairSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
+       
         self.fields["password"] = PasswordField()
+        self.fields["wallet"] = serializers.CharField()
 
     def validate(self, attrs):
         credentials = {
             'password': attrs.get("password"),
+            'wallet': attrs.get("wallet"),
         }
 
         user = authenticate(request=self.context['request'], **credentials)
+
         if user is None:
-            raise serializers.ValidationError("Invalid password")
+            raise serializers.ValidationError("Invalid wallet address or request body")
 
         refresh = RefreshToken.for_user(user) 
         data = {

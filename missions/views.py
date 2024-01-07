@@ -30,8 +30,8 @@ class MissionCreateView(generics.GenericAPIView):
 
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
-            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(minutes=1)
-            
+            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
+            print(nextMissionCreationDate)
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
             if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):

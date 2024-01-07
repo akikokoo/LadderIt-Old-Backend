@@ -134,6 +134,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# CUSTOM BACKEND
 AUTHENTICATION_BACKENDS = ['users.custom_backend.PasswordBackend']
 
 REST_FRAMEWORK = {

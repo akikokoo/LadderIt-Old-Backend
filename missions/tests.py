@@ -14,6 +14,7 @@ class MissionsTestCase(APITestCase):
                 "username": "akif",
                 "password": "123",
                 "timeZone":"+3",
+                "wallet":"123",
                 
             },
         )
@@ -21,13 +22,13 @@ class MissionsTestCase(APITestCase):
         response = self.client.post(
             reverse("token_obtain_pair"), #login
             {   
-                
+                "wallet":"123",
                 "password": "123",
             },
         )
         
         try:
-            # print(response.data)
+            print(response.data)
             token = response.data["access"]
             self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
         except Exception as e:
@@ -47,7 +48,6 @@ class MissionsTestCase(APITestCase):
         response = self.client.post(reverse("mission-create"), sample_data)       
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], sample_data["title"])
-        print(response.data["title"])
 
         sample_data = {"title": "Görev 2", "user":1}
         response = self.client.post(reverse("mission-create"), sample_data)
@@ -85,6 +85,7 @@ class MissionsTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         print(response.data)
+        # self.test_mission_creation()
 
     def test_changing_is_complete(self):
         self.authenticate()

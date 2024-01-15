@@ -19,10 +19,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         if not password:
             return Response({'error': 'password is required.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        user = authenticate(request=request, password=password, wallet=wallet)
-
-        if user is None:
-            return Response({'error': 'Invalid password or request body'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            user = authenticate(request=request, password=password, wallet=wallet)
+        
+        except Exception as e:
+            return Response({'error': f'{e}'}, status=status.HTTP_401_UNAUTHORIZED)
         
         response = super().post(request, *args, **kwargs)
         # Customize response data here if needed

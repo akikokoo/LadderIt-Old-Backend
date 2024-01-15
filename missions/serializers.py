@@ -7,7 +7,8 @@ class MissionCreateSerializer(serializers.ModelSerializer):
         model = Mission
         fields = [
             "user",
-            "title"
+            "title",
+            "startDate"
         ]
 
 class UserSerializer(serializers.ModelSerializer):

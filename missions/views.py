@@ -31,15 +31,15 @@ class MissionCreateView(generics.GenericAPIView):
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
             nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
-            print(nextMissionCreationDate)
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
             if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):
                 return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
+        
         data = self.request.data
-
+        data["startDate"] = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
         serializer = self.get_serializer(data=data)
         
         if serializer.is_valid(raise_exception=True):

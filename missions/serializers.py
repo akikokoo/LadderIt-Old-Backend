@@ -8,9 +8,10 @@ class MissionCreateSerializer(serializers.ModelSerializer):
         fields = [
             "user",
             "title",
-            "startDate"
+            "startDate",
+            "category",
         ]
-
+        
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

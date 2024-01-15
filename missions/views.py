@@ -39,9 +39,9 @@ class MissionCreateView(generics.GenericAPIView):
 
         
         data = self.request.data
-        data["startDate"] = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+
         serializer = self.get_serializer(data=data)
-        
+
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -148,7 +148,7 @@ class MissionCompleteView(generics.GenericAPIView):
                     mission.numberOfDays += 1
 
                     mission.save()
-
+                    
                     return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
                 
                 # There is a previous completion on that day

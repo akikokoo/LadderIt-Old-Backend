@@ -39,7 +39,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 class MissionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
-        fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted"]
+        fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted", "startDate", "category"]
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:

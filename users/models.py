@@ -9,9 +9,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     lastMissionDeletionDate = models.DateTimeField(null=True, blank=True)
-    timeZone = models.CharField(max_length=5)
 
     REQUIRED_FIELDS = []
 
-    def __str__(self):
-        return f"{self.username}"
+    

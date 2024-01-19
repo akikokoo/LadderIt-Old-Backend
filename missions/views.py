@@ -8,6 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 #SWAGGER
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 #SERIALIZERS
 from .serializers import (
@@ -24,16 +25,31 @@ class MissionCreateView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class=MissionCreateSerializer
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'local_time': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Local time in ISO 8601 format (e.g., "2023-01-13T21:00:00.000")'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['local_time'],
+        ),
+        responses={201: 'CREATED', 400:'BAD REQUEST'},
+    )
     def post(self, request):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
+        local_time = datetime.fromisoformat(self.request.data.get("local_time"))
 
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
             nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
-            if nextMissionCreationDate > datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone)):
+            if nextMissionCreationDate > local_time:
                 return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,16 +61,6 @@ class MissionCreateView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @classmethod
-    def as_view(cls, **initkwargs):
-        view = super(MissionCreateView, cls).as_view(**initkwargs)
-        
-        # Apply swagger_auto_schema to the post method
-        view.post = swagger_auto_schema(
-            request_body=MissionCreateSerializer, method="post")
-
-        return view
     
 
 
@@ -71,13 +77,28 @@ class MissionDeleteView(generics.DestroyAPIView):
     def perform_destroy(self, instance):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
-        deletionTime = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+        local_time = self.request.data.get("local_time")
+        deletionTime = datetime.fromisoformat(local_time)
         user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
         
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.save()
             instance.delete()
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'local_time': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Local time in ISO 8601 format (e.g., "2023-01-13T21:00:00.000")'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['local_time'],
+        ),
+        responses={200: 'OK'},
+    )
     def delete(self, request, *args, **kwargs):
         missions = self.get_queryset()
         mission_id = self.kwargs.get('pk')
@@ -91,16 +112,6 @@ class MissionDeleteView(generics.DestroyAPIView):
             return Response({"message": f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-    @classmethod
-    def as_view(cls, **initkwargs):
-        view = super(MissionDeleteView, cls).as_view(**initkwargs)
-        
-        # Apply swagger_auto_schema to the post method
-        view.post = swagger_auto_schema(
-            request_body = None, method="delete")
-
-        return view
-
 
 #NOT DONE(TOKEN AND NFT MINTING?)
 class MissionCompleteView(generics.GenericAPIView):
@@ -113,11 +124,26 @@ class MissionCompleteView(generics.GenericAPIView):
 
         return missions
     
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'local_time': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Local time in ISO 8601 format (e.g., "2023-01-13T21:00:00.000")'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['local_time'],
+        ),
+        responses={200: 'OK', 400: 'BAD REQUEST'},
+    )
     def patch(self, request, *args, **kwargs):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
+        local_time = datetime.fromisoformat(self.request.data.get("local_time")) #request body should include "local_time", write request body req. for swagger doc.
 
         try:
             mission = missions.get(id=mission_id)
@@ -132,19 +158,16 @@ class MissionCompleteView(generics.GenericAPIView):
                                                     second=0,
                                                     microsecond=0,
                                                     tzinfo=timezone.utc).replace(tzinfo=None)
-                # print(mission.prevDate)
-                # print(nextMissionCompletionDate)
-                # print(datetime.utcnow() + timedelta(hours=int(user.timeZone)))
-                # print(nextMissionCompletionDate - (datetime.utcnow() + timedelta(hours=int(user.timeZone))))
+                
                 # User skipped one or more day for the mission completion
-                if timedelta(days=1) < (nextMissionCompletionDate - (datetime.utcnow() + timedelta(hours=int(user.timeZone)))):
+                if timedelta(days=1) < (nextMissionCompletionDate - (local_time)):
                     mission.delete() #does that actually deletes the mission?
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 # Previous completion of that mission is not in the same day with this completion request
-                elif nextMissionCompletionDate <= datetime.utcnow() + timedelta(hours=int(user.timeZone)):
+                elif nextMissionCompletionDate <= local_time:
                     mission.isCompleted = True
-                    mission.prevDate = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+                    mission.prevDate = local_time
                     mission.numberOfDays += 1
 
                     mission.save()
@@ -155,11 +178,11 @@ class MissionCompleteView(generics.GenericAPIView):
                 elif mission.isCompleted == True:
                     return Response({'message':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
-            #numberOfDays is 0, because prevDate does not exist.
+            # numberOfDays is 0, because prevDate does not exist.
             else:
                 
                 mission.isCompleted = True
-                mission.prevDate = datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=int(user.timeZone))
+                mission.prevDate = local_time
                 mission.numberOfDays += 1
 
                 mission.save()
@@ -173,16 +196,6 @@ class MissionCompleteView(generics.GenericAPIView):
         except:
             return Response({"message":"given mission_id does not exist"}, status=status.HTTP_400_BAD_REQUEST)
     
-    
-    @classmethod
-    def as_view(cls, **initkwargs):
-        view = super(MissionCompleteView, cls).as_view(**initkwargs)
-        
-        # Apply swagger_auto_schema to the post method
-        view.post = swagger_auto_schema(
-            request_body=None, method="post")
-
-        return view
         
 class ChangeIsCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]

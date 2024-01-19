@@ -12,6 +12,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 #SWAGGER
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 #SERIALIZERS
 from .serializers import (
@@ -19,9 +20,13 @@ from .serializers import (
     UserRegisterSerializer,
     UserDetailSerializer,
     ProfileUpdateSerializer,
-    MissionListSerializer
+    MissionListSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetSerializer,
 )
 
+# OTHERS
+import string, random
 
 class RegistrationView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
@@ -102,6 +107,91 @@ class ProfileUpdateView(generics.GenericAPIView):
 
         return view
 
+# ------------------------------------------------------------------------------------------------------
+class PasswordResetView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'email': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Email of the user'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['email'],
+        ),
+        responses={
+        200: openapi.Response(
+            description='Custom Response Body',
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'token': openapi.Schema(type=openapi.TYPE_STRING,),
+                },
+            ),
+            ),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        try:
+            email = self.request.data.get("email")
+            token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            send_mail(
+                    'Password Reset Token',
+                    f""" To reset your password, please use the following 6-digit token: {token}, 
+                    This token is valid for a limited time period. Please use it to reset your password as soon as possible.
+
+                    Thank you,
+                    Ladder It Development Team""" + token,
+                    'laddergatherit@gmail.com',
+                    [email], fail_silently=True
+            )
+        except Exception as e:
+            return Response({"error":f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"token":token},status=status.HTTP_200_OK)
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'password': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='New password of the user'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['email'],
+        ),
+        responses={
+        200: openapi.Response(
+            description='Custom Response Body',
+            ),
+        },
+    )
+    def post(self, request, *args, **kwargs):
+        try:
+            password = self.request.data.get("password")
+            user_id = self.request.user.id
+            user = User.objects.get(id=user_id)
+
+            user.set_password(password)
+            user.save()
+        
+        except Exception as e:
+            return Response({"message":f"{e}"},status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"message":"Password has changed successfully"}, status=status.HTTP_200_OK)
+        
+# ------------------------------------------------------------------------------------------------------
 
 
 class ContactFormView(generics.GenericAPIView):  

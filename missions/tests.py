@@ -13,8 +13,8 @@ class MissionsTestCase(APITestCase):
             {   
                 "username": "akif",
                 "password": "123",
-                "timeZone":"+3",
                 "wallet":"123",
+                "email":"akif@hotmail.com",
                 
             },
         )
@@ -44,7 +44,7 @@ class MissionsTestCase(APITestCase):
 
         print("-----MISSION CREATION TEST START-----")
 
-        sample_data = {"title": "Görev 1", "user":1}
+        sample_data = {"title": "Görev 1", "user":1, }
         response = self.client.post(reverse("mission-create"), sample_data)       
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], sample_data["title"])
@@ -70,7 +70,7 @@ class MissionsTestCase(APITestCase):
         '''
         self.authenticate()
         self.test_mission_creation()
-        sample_data = {"user": 1}
+        sample_data = {"user": 1, "local_time":'2024-01-19 19:00+0100'}
         response = self.client.patch(reverse("mission-complete", kwargs={"pk":1}), sample_data)
         print(response.data)
 

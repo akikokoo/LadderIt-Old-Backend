@@ -11,11 +11,14 @@ class PasswordBackend(ModelBackend):
     def authenticate(self, request, password=None, wallet=None, **kwargs):
         if set(request.data.keys()) == {"wallet","password"}:
             try:
-                user = User.objects.get(wallet=wallet, password=password)
+                user = User.objects.get(wallet=wallet)
             except User.DoesNotExist:
                 return None
 
-            return user
+            if user.check_password(password):
+                return user
+            else:
+                return None
         else:
             return None
 

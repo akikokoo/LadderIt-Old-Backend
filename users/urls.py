@@ -4,7 +4,9 @@ from .views import (
     RegistrationView,
     MissionListView,
     ProfileUpdateView,
-    UserDetailView
+    UserDetailView,
+    PasswordResetConfirmView,
+    PasswordResetView,
 )
 
 urlpatterns = [
@@ -13,4 +15,6 @@ urlpatterns = [
     path('user_detail/',UserDetailView.as_view(), name="user-detail"),
     path('mission_list/',MissionListView.as_view(), name="mission-list"),
     path('profile_update/',ProfileUpdateView.as_view(), name="user-profile-update"),
+    path('password_reset/',PasswordResetView.as_view(), name="password-reset"),
+    path('password_reset_confirm/',PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
 ]

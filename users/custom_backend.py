@@ -11,7 +11,7 @@ class PasswordBackend(ModelBackend):
     def authenticate(self, request, password=None, wallet=None, **kwargs):
         if set(request.data.keys()) == {"wallet","password"}:
             try:
-                user = User.objects.get(wallet=wallet)
+                user = User.objects.get(wallet=wallet, password=password)
             except User.DoesNotExist:
                 return None
 

@@ -10,11 +10,20 @@ class ContactFormSerializer(serializers.Serializer):
     surname = serializers.CharField(max_length=20)
     message = serializers.CharField(max_length=1000)
 
+class PasswordResetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'id']
+        
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    class Meta:
+        model = User
+        fields = ['password', 'id']
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'wallet', 'timeZone', 'password']
+        fields = ['id', 'username', 'wallet', 'password', 'email']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -34,7 +43,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "timeZone"]
+        fields = ["id", "username", "email"]
 
 class MissionListSerializer(serializers.ModelSerializer):
     class Meta:

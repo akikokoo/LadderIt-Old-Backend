@@ -55,7 +55,9 @@ class MissionCreateView(generics.GenericAPIView):
 
         
         data = self.request.data
-
+        data._mutable = True
+        data["startDate"] = local_time
+        data._mutable = False
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):

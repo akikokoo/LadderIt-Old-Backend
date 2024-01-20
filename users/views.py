@@ -139,21 +139,22 @@ class PasswordResetView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         try:
             email = self.request.data.get("email")
-            token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-            send_mail(
-                    'Password Reset Token',
-                    f""" To reset your password, please use the following 6-digit token: {token}, 
-                    This token is valid for a limited time period. Please use it to reset your password as soon as possible.
+            if User.objects.get(email=email):
+                token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+                send_mail(
+                        'Password Reset Token',
+                        f""" To reset your password, please use the following 6-digit token: {token}, 
+                        This token is valid for a limited time period. Please use it to reset your password as soon as possible.
 
-                    Thank you,
-                    Ladder It Development Team""" + token,
-                    'laddergatherit@gmail.com',
-                    [email], fail_silently=True
-            )
+                        Thank you,
+                        Ladder It Development Team"""
+                        'laddergatherit@gmail.com',
+                        [email], fail_silently=True
+                )
+                
+                return Response({"token":token},status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error":f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response({"token":token},status=status.HTTP_200_OK)
 
 class PasswordResetConfirmView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -180,8 +181,8 @@ class PasswordResetConfirmView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         try:
             password = self.request.data.get("password")
-            user_id = self.request.user.id
-            user = User.objects.get(id=user_id)
+            email = self.request.data.get("email")
+            user = User.objects.get(email=email)
 
             user.set_password(password)
             user.save()

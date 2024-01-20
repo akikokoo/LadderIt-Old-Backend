@@ -142,16 +142,16 @@ class PasswordResetView(generics.GenericAPIView):
             if User.objects.get(email=email):
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
                 send_mail(
-                        'Password Reset Token',
-                        f""" To reset your password, please use the following 6-digit token: {token}, 
+                        subject='Password Reset Token',
+                        message=f""" To reset your password, please use the following 6-digit token: {token}, 
                         This token is valid for a limited time period. Please use it to reset your password as soon as possible.
 
                         Thank you,
-                        Ladder It Development Team"""
-                        'laddergatherit@gmail.com',
-                        [email], fail_silently=True
+                        Ladder It Development Team""",
+                        from_email='laddergatherit@gmail.com',
+                        recipient_list=[email], fail_silently=True
                 )
-                
+
                 return Response({"token":token},status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error":f"{e}"}, status=status.HTTP_400_BAD_REQUEST)

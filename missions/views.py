@@ -54,10 +54,8 @@ class MissionCreateView(generics.GenericAPIView):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         
-        data = self.request.data
-        data._mutable = True
+        data = self.request.data.copy()
         data["startDate"] = local_time
-        data._mutable = False
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):

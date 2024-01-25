@@ -21,8 +21,6 @@ from .serializers import (
     UserDetailSerializer,
     ProfileUpdateSerializer,
     MissionListSerializer,
-    PasswordResetConfirmSerializer,
-    PasswordResetSerializer,
 )
 
 # OTHERS
@@ -143,16 +141,18 @@ class PasswordResetView(generics.GenericAPIView):
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
                 send_mail(
                         subject='Password Reset Token',
-                        message=f""" To reset your password, please use the following 6-digit token: {token}, 
-                        This token is valid for a limited time period. Please use it to reset your password as soon as possible.
+                        message=f""" To reset your password, please use the following 6-digit token: {token}\n
+                        This token is valid for a limited time period. Please use it to reset your password as soon as possible.\n
 
-                        Thank you,
+                        Thank you,\n
                         Ladder It Development Team""",
                         from_email='laddergatherit@gmail.com',
                         recipient_list=[email], fail_silently=True
                 )
 
                 return Response({"token":token},status=status.HTTP_200_OK)
+            else:
+                return Response({"message":"Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error":f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -142,6 +142,7 @@ class MissionCompleteView(generics.GenericAPIView):
     def patch(self, request, *args, **kwargs):
         user_id = self.request.user.id
         user = User.objects.get(id=user_id)
+        user_wallet = user.wallet
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
         local_time = datetime.fromisoformat(self.request.data.get("local_time")) #request body should include "local_time", write request body req. for swagger doc.
@@ -161,7 +162,7 @@ class MissionCompleteView(generics.GenericAPIView):
                                                     tzinfo=timezone.utc).replace(tzinfo=None)
                 
                 # User skipped one or more day for the mission completion
-                if timedelta(days=1) < (nextMissionCompletionDate - (local_time)):
+                if timedelta(days=1) < (local_time - (mission.prevDate)):
                     mission.delete() #does that actually deletes the mission?
                     return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
@@ -171,6 +172,8 @@ class MissionCompleteView(generics.GenericAPIView):
                     mission.prevDate = local_time
                     mission.numberOfDays += 1
 
+                    # mint_token(user_wallet)
+                    
                     mission.save()
                     
                     return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
@@ -187,7 +190,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 mission.numberOfDays += 1
 
                 mission.save()
-                #mint_token(mission) TOKEN MINTING
+
                 
                 return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
         

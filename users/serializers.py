@@ -48,7 +48,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "deviceId"]
+        fields = ["id", "username", "email"]
 
 class MissionListSerializer(serializers.ModelSerializer):
     last_mission_completion_hours = serializers.SerializerMethodField()

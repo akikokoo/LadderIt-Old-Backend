@@ -200,7 +200,6 @@ class MissionCompleteView(generics.GenericAPIView):
                 
             # Previous completion of that mission is not in the same day with this completion request
             elif nextMissionCompletionDate <= local_time.replace(tzinfo=None):
-                mission.isCompleted = True
                 mission.prevDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
                 mission.numberOfDays += F('numberOfDays') + 1
 
@@ -216,7 +215,6 @@ class MissionCompleteView(generics.GenericAPIView):
                 
         # numberOfDays is 0, because prevDate does not exist.
         else:          
-            mission.isCompleted = True
             mission.prevDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
             mission.numberOfDays += F('numberOfDays') + 1
             mission.save()

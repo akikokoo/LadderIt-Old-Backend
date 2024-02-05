@@ -42,7 +42,7 @@ class RegistrationView(generics.CreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #--------------------------------------------------------------------------------------------------------
-        
+# response.data -> [OrderedDict([('id', 1), ('title', 'Görev 1'), ('prevDate', '2024-01-19T16:00:00Z'), ('numberOfDays', 1), ('isCompleted', True), ('startDate', '2024-01-19T16:00:00Z'), ('category', 'art'), ('last_mission_completion_hours', 32.0)])
 class MissionListView(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

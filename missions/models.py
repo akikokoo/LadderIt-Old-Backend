@@ -7,7 +7,6 @@ class Mission(models.Model):
     startDate = models.DateTimeField(null=True, max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, null=True)
-    isCompleted = models.BooleanField(default=False) #in mission creation we set isCompleted to False
     prevDate = models.DateTimeField(blank=True,null=True, max_length=50)
     numberOfDays = models.IntegerField(default=0)
     

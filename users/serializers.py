@@ -33,6 +33,16 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'email':{'required':True},
         }
 
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username is already taken")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email is already taken")
+        return value
+    
     def create(self, validated_data):
         validated_data['password'] = make_password(validated_data['password'])
         return super(UserRegisterSerializer, self).create(validated_data)
@@ -55,7 +65,7 @@ class MissionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mission
-        fields = ["id", "title", "prevDate", "numberOfDays", "isCompleted", "startDate", "category", "last_mission_completion_hours"]
+        fields = ["id", "title", "prevDate", "numberOfDays", "startDate", "category", "last_mission_completion_hours"]
     
     def get_last_mission_completion_hours(self, obj):
         timezone = self.context['request'].query_params.get('timezone')

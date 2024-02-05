@@ -2,8 +2,8 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 
 #Web3
-from eth_account.messages import encode_defunct
-from web3 import Account, Web3
+# from eth_account.messages import encode_defunct
+# from web3 import Account, Web3
 
 User = get_user_model()
 

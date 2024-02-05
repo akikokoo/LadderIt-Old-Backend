@@ -10,7 +10,7 @@ class MissionCreateSerializer(serializers.ModelSerializer):
             "title",
             "category",
         ]
-        
+        #f
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

@@ -42,16 +42,28 @@ class RegistrationView(generics.CreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #--------------------------------------------------------------------------------------------------------
+        
 class MissionListView(generics.ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = MissionListSerializer
+
+    def get_serializer_context(self):
+          """Adds request to the context of serializer"""
+          return {"request": self.request}
     
     def get_queryset(self):
         user = self.request.user
         missions = Mission.objects.filter(user=user)
 
         return missions
+    
+    @swagger_auto_schema(manual_parameters=[
+        openapi.Parameter('local_time', openapi.IN_QUERY, description="Local time", type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
+        openapi.Parameter('timezone', openapi.IN_QUERY, description="Timezone", type=openapi.TYPE_STRING),
+        ],
+        operation_description="Use this endpoint to get a list of missions. Include 'local_time' and 'timezone' as query parameters. For example: /missions?local_time=2022-03-01T12:00:00Z&timezone=America/New_York"
+    )
 
     def get(self, request, *args, **kwargs):
         missions = self.get_queryset()

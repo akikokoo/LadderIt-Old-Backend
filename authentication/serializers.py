@@ -31,7 +31,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         user = authenticate(request=self.context['request'], **credentials)
 
         if user is None:
-            raise serializers.ValidationError("Invalid wallet address or request body")
+            raise serializers.ValidationError("Invalid wallet address or password")
 
         refresh = RefreshToken.for_user(user) 
         data = {

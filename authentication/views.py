@@ -13,17 +13,13 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     # Customize the response data if needed
     def post(self, request, *args, **kwargs):
-        password = request.data.get('password', None)
-        wallet = request.data.get('wallet', None) #wallet address
+        # password = request.data.get('password', None)
+        # wallet = request.data.get('wallet', None) #wallet address
 
-        if not password:
-            return Response({'error': 'password is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            user = authenticate(request=request, password=password, wallet=wallet)
-        
-        except Exception as e:
-            return Response({'error': f'{e}'}, status=status.HTTP_401_UNAUTHORIZED)
+        # if not password:
+        #     return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # if not wallet:
+        #     return Response({'error': 'Wallet is required.'}, status=status.HTTP_400_BAD_REQUEST)
         
         response = super().post(request, *args, **kwargs)
         # Customize response data here if needed

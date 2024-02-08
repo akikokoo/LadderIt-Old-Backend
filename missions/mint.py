@@ -2,6 +2,7 @@ from web3 import Web3
 from web3.middleware import geth_poa_middleware
 import json, os
 
+
 def mint_token(user_wallet):
     w3 = Web3(Web3.HTTPProvider(os.getenv("WEB3_PROVIDER")))
     contract_address = "0xB5Ef6aA58dba52fC26eF145C11aaC80b8BAfdEB9"
@@ -14,12 +15,12 @@ def mint_token(user_wallet):
 
     nonce = w3.eth.get_transaction_count(os.getenv("WEB3_NONCE"))
     # Verify if the connection is successful
-    if w3.is_connected():
-        print("-" * 50)
-        print("Connection Successful")
-        print("-" * 50)
-    else:
-        print("Connection Failed")
+    # if w3.is_connected():
+    #     print("-" * 50)
+    #     print("Connection Successful")
+    #     print("-" * 50)
+    # else:
+    #     print("Connection Failed")
         
     # Load the contract
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)

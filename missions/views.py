@@ -21,6 +21,7 @@ from .serializers import (
 from datetime import timedelta, datetime
 import pytz
 from modules import return_local_time
+from .mint import mint_token
 
 class MissionCreateView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
@@ -168,9 +169,9 @@ class MissionCompleteView(generics.GenericAPIView):
         responses={200: 'OK', 400: 'BAD REQUEST'},
     )
     def patch(self, request, *args, **kwargs):
-        # user_id = self.request.user.id
-        # user = User.objects.get(id=user_id)
-        # user_wallet = user.wallet
+        user_id = self.request.user.id
+        user = User.objects.get(id=user_id)
+        user_wallet = user.wallet
 
         missions = self.get_queryset()
         mission_id = self.kwargs['pk']
@@ -203,7 +204,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 mission.prevDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
                 mission.numberOfDays += F('numberOfDays') + 1
 
-                # mint_token(user_wallet)
+                mint_token(user_wallet)
                     
                 mission.save()
                     

@@ -45,6 +45,4 @@ def mint_token(user_wallet):
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     print("Transaction receipt is: ", receipt)
 
-mint_token("asd")
-
     

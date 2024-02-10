@@ -58,14 +58,14 @@ class MissionCreateView(generics.GenericAPIView):
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
             # getting local_time in the same timezone with the mission start or deletion date
-            local_time = return_local_time(local_time=local_time,
+            local_time_temp = return_local_time(local_time=local_time,
                                             current_utc_offset=local_time.strftime('%z')[:3],
                                             mission_start_or_deletion_utc=user.lastMissionDeletionDate.strftime("%z")[:3]
                                             )
             nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
-            if nextMissionCreationDate.replace(tzinfo=None) > local_time.replace(tzinfo=None):
+            if nextMissionCreationDate.replace(tzinfo=None) > local_time_temp.replace(tzinfo=None):
                 return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -74,7 +74,7 @@ class MissionCreateView(generics.GenericAPIView):
 
                 if serializer.is_valid(raise_exception=True):
                     instance = serializer.save()
-                    instance.startDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
+                    instance.startDate = local_time
                     instance.save()
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -143,12 +143,6 @@ class MissionDeleteView(generics.DestroyAPIView):
 class MissionCompleteView(generics.GenericAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        missions = Mission.objects.filter(user=user)
-
-        return missions
     
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -169,17 +163,16 @@ class MissionCompleteView(generics.GenericAPIView):
         responses={200: 'OK', 400: 'BAD REQUEST'},
     )
     def patch(self, request, *args, **kwargs):
-        user_id = self.request.user.id
-        user = User.objects.get(id=user_id)
-        user_wallet = user.wallet
-
-        missions = self.get_queryset()
         mission_id = self.kwargs['pk']
-        mission = missions.get(id=mission_id)
+        mission = Mission.objects.select_related('user').get(id=mission_id)
+
+        user = mission.user
+        user_wallet = user.wallet
 
         current_timezone = self.request.data.get("timezone")
         local_time = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
-        local_time = return_local_time(local_time=local_time,
+       
+        local_time_temp = return_local_time(local_time=local_time,
                                     current_utc_offset=local_time.strftime('%z')[:3],
                                     mission_start_or_deletion_utc=mission.startDate.strftime("%z")[:3]
                                     )
@@ -195,13 +188,13 @@ class MissionCompleteView(generics.GenericAPIView):
                                                 )
                 
             # User skipped one or more day for the mission completion
-            if timedelta(days=1, hours=24 - mission.prevDate.hour) < (local_time.replace(tzinfo=None) - (mission.prevDate.replace(tzinfo=None))):
+            if timedelta(days=1, hours=24 - mission.prevDate.hour) < (local_time_temp.replace(tzinfo=None) - (mission.prevDate.replace(tzinfo=None))):
                 mission.delete() #does that actually deletes the mission?
                 return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
             # Previous completion of that mission is not in the same day with this completion request
-            elif nextMissionCompletionDate <= local_time.replace(tzinfo=None):
-                mission.prevDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
+            elif nextMissionCompletionDate <= local_time_temp.replace(tzinfo=None):
+                mission.prevDate = local_time_temp
                 mission.numberOfDays = F('numberOfDays') + 1
 
                 mint_token(user_wallet)
@@ -216,7 +209,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 
         # numberOfDays is 0, because prevDate does not exist.
         else:          
-            mission.prevDate = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
+            mission.prevDate = local_time_temp
             mission.numberOfDays = F('numberOfDays') + 1
             mission.save()
 

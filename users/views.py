@@ -180,6 +180,10 @@ class PasswordResetConfirmView(generics.GenericAPIView):
                         type=openapi.TYPE_STRING,
                         description='New password of the user'
                     ),
+                    'email': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Email of the user'
+                    ),
                     # Add other properties as needed
                 },
                 required=['email'],

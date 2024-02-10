@@ -42,7 +42,7 @@ class MissionsTestCase(APITestCase):
 
         sample_data = {"title": "Görev 1", "user":1, "category":"art", "local_time":"2024-01-19T19:00:00.000", "timezone":"Europe/Istanbul"}
         response = self.client.post(reverse("mission-create"), data=json.dumps(sample_data), content_type='application/json')       
-        print(response.data)
+        # print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], sample_data["title"])
         # sample_data = {"title": "Görev 1", "user":1, "category":"art", "local_time":"2024-01-20T19:00:00.000", "timezone":"Europe/Istanbul"}
@@ -68,7 +68,7 @@ class MissionsTestCase(APITestCase):
         self.test_mission_creation()
         sample_data = {"user": 1, "local_time":'2024-01-19 19:00:00.000', "timezone":"Europe/Istanbul"}
         response = self.client.patch(reverse("mission-complete", kwargs={"pk":1}), sample_data)
-        print(response.data)
+        # print(response.data)
 
 
     #     sample_data = {"user": 1, "local_time":'2024-01-19 20:00:00.000', "timezone":"Europe/Istanbul"}
@@ -77,34 +77,25 @@ class MissionsTestCase(APITestCase):
 
     def test_mission_list(self):
         self.authenticate()
-        self.test_mission_creation()
+        # self.test_mission_creation()
         self.test_mission_complete()
         response = self.client.get(reverse("mission-list"), {"timezone":"Europe/Istanbul", "local_time":"2024-01-19T19:00:00.000"})
         print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    # def test_mission_delete(self):
-    #     self.authenticate()
-    #     self.test_mission_creation()
-    #     sample_data = {"timezone":"Europe/Istanbul", "local_time":"2024-01-19T19:00:00.000"}
-    #     response = self.client.delete(reverse("mission-delete", kwargs={"pk":1}),data=sample_data)
+
+    def test_mission_delete(self):
+        self.authenticate()
+        self.test_mission_creation()
+        sample_data = {"timezone":"Europe/Istanbul", "local_time":"2024-01-19T19:00:00.000"}
+        response = self.client.delete(reverse("mission-delete", kwargs={"pk":1}),data=sample_data)
         
-    #     print(response.data)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-    #     self.test_mission_creation()
+        # self.test_mission_creation()
 
 
-    # def test_changing_is_complete(self):
-    #     self.authenticate()
-    #     self.test_mission_creation()
-    #     response = self.client.patch(reverse("mission-is-complete"))
-        
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     print(response.data)
-    #     print(Mission.objects.get(id=1).isCompleted)
-
-    #     # can we complete mission after changing isCompleted to False?
-    #     self.test_mission_complete()
+    
         
         
 

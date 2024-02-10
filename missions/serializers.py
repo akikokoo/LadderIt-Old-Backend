@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Mission
 from users.models import User
 
+
+
 class MissionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
@@ -10,7 +12,7 @@ class MissionCreateSerializer(serializers.ModelSerializer):
             "title",
             "category",
         ]
-        #f
+        
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

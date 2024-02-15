@@ -66,7 +66,7 @@ class MissionCreateView(generics.GenericAPIView):
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
             if nextMissionCreationDate.replace(tzinfo=None) > local_time_temp.replace(tzinfo=None):
-                return Response({'message': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
+                return Response({'errorMessage': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 data = self.request.data
@@ -135,7 +135,7 @@ class MissionDeleteView(generics.DestroyAPIView):
                 return Response({"message": "Mission deleted succesfully"}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            return Response({"message": f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"errorMessage": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -190,7 +190,7 @@ class MissionCompleteView(generics.GenericAPIView):
             # User skipped one or more day for the mission completion
             if timedelta(days=1, hours=24 - mission.prevDate.hour) < (local_time_temp.replace(tzinfo=None) - (mission.prevDate.replace(tzinfo=None))):
                 mission.delete() #does that actually deletes the mission?
-                return Response({'message':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'errorMessage':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
             # Previous completion of that mission is not in the same day with this completion request
             elif nextMissionCompletionDate <= local_time_temp.replace(tzinfo=None):
@@ -205,7 +205,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 
             # There is a previous completion on that day
             else:
-                return Response({'message':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'errorMessage':'Cannot complete same mission more than once in a day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
         # numberOfDays is 0, because prevDate does not exist.
         else:          

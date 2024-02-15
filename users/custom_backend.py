@@ -1,6 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
-
+from rest_framework import status
+from rest_framework.response import Response
 #Web3
 # from eth_account.messages import encode_defunct
 # from web3 import Account, Web3

@@ -160,6 +160,7 @@ REST_FRAMEWORK = {
         "send_mail" : "10/day",
 
     },
+
 }
 
 SIMPLE_JWT = {

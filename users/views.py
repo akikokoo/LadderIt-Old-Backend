@@ -34,12 +34,11 @@ class RegistrationView(generics.CreateAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=self.request.data)
 
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #--------------------------------------------------------------------------------------------------------
 # response.data -> [OrderedDict([('id', 1), ('title', 'Görev 1'), ('prevDate', '2024-01-19T16:00:00Z'), ('numberOfDays', 1), ('isCompleted', True), ('startDate', '2024-01-19T16:00:00Z'), ('category', 'art'), ('last_mission_completion_hours', 32.0)])
@@ -105,7 +104,7 @@ class ProfileUpdateView(generics.GenericAPIView):
         
         else:
             # Return an error response
-            return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @classmethod
     def as_view(cls, **initkwargs):
@@ -164,9 +163,9 @@ class PasswordResetView(generics.GenericAPIView):
 
                 return Response({"token":token},status=status.HTTP_200_OK)
             else:
-                return Response({"message":"Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"errorMessage":"Invalid email"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({"error":f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(f"{e}", status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetConfirmView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -204,7 +203,7 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             user.save()
         
         except Exception as e:
-            return Response({"message":f"{e}"},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"errorMessage":f"{e}"},status=status.HTTP_400_BAD_REQUEST)
         
         return Response({"message":"Password has changed successfully"}, status=status.HTTP_200_OK)
         

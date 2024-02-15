@@ -12,6 +12,14 @@ class MissionCreateSerializer(serializers.ModelSerializer):
             "title",
             "category",
         ]
+    
+    def validate_title(self, value):
+        if Mission.objects.filter(title=value).exists():
+            error_dict = {
+                'errorMessage': 'Title is already taken',
+            }
+            raise serializers.ValidationError(error_dict)
+        return value
         
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

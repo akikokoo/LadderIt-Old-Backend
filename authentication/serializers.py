@@ -1,9 +1,10 @@
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import RefreshToken
 from django.contrib.auth import get_user_model
-
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import exception_handler
 User = get_user_model()
 
 class PasswordField(serializers.CharField):
@@ -31,14 +32,16 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         user = authenticate(request=self.context['request'], **credentials)
 
         if user is None:
-            raise serializers.ValidationError("Invalid wallet address or password")
+            error_dict = {
+                'errorMessage': 'Invalid wallet address or password',
+            }
+            raise serializers.ValidationError(error_dict)
 
-        refresh = RefreshToken.for_user(user) 
+        refresh = RefreshToken.for_user(user)
         data = {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
         
         data["username"] = user.username 
-
         return data

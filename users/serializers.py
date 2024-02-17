@@ -74,10 +74,13 @@ class MissionListSerializer(serializers.ModelSerializer):
     def get_last_mission_completion_hours(self, obj):
         timezone = self.context['request'].query_params.get('timezone')
         local_time = local_time=pytz.timezone(timezone).localize(datetime.fromisoformat(self.context['request'].query_params.get('local_time')))
+
+        if obj.prevDate is None:
+            return None
+        
         prevDate = get_time(timezone, obj.prevDate)
 
-        if prevDate is None:
-            return None
+        
         
         # local_time = return_local_time(local_time=local_time,
         #                                current_utc_offset=local_time.strftime("%z")[:3],

@@ -182,7 +182,7 @@ class MissionCompleteView(generics.GenericAPIView):
                                                 minute=0,
                                                 second=0,
                                                 microsecond=0
-                                                )
+                                                ).astimezone(pytz.UTC)
                 
             # User skipped one or more day for the mission completion
             if timedelta(days=1, hours=24 - prevDate.hour) < (current_time_in_mission_start_timezone - prevDate):

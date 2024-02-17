@@ -80,6 +80,7 @@ class MissionsTestCase(APITestCase):
         self.authenticate()
         # self.test_mission_creation()
         self.test_mission_complete()
+        self.test_mission_complete()
         response = self.client.get(reverse("mission-list"), {"timezone":"Europe/Istanbul", "local_time":"2024-01-19T19:00:00.000"})
         print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

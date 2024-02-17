@@ -9,6 +9,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=50, null=True, blank=True)
     last_name = models.CharField(max_length=50, null=True, blank=True)
     lastMissionDeletionDate = models.DateTimeField(null=True, blank=True, max_length=50)
+    deletionTimezone = models.CharField(max_length=50, null=True, blank=True) #'America/Los_Angeles'
     isEligibleForReward = models.BooleanField(default=False)
     # deviceId = models.CharField(max_length=255, null=True, blank=True) #DEVICE ID OF THE USER
     

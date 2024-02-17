@@ -20,7 +20,7 @@ from .serializers import (
 #OTHER LIBRARIES
 from datetime import timedelta, datetime
 import pytz
-from modules import return_local_time
+from modules import return_local_time, get_time
 from .mint import mint_token
 
 class MissionCreateView(generics.GenericAPIView):
@@ -58,14 +58,12 @@ class MissionCreateView(generics.GenericAPIView):
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
             # getting local_time in the same timezone with the mission start or deletion date
-            local_time_temp = return_local_time(local_time=local_time,
-                                            current_utc_offset=local_time.strftime('%z')[:3],
-                                            mission_start_or_deletion_utc=user.lastMissionDeletionDate.strftime("%z")[:3]
-                                            )
-            nextMissionCreationDate = user.lastMissionDeletionDate + timedelta(days=1)
+            deletion_time = get_time(user.deletionTimezone, user.lastMissionDeletionDate)
+            nextMissionCreationDate = deletion_time + timedelta(days=1)
+            current_time_in_deletion_timezone = get_time(user.deletionTimezone, datetime.now(pytz.UTC))
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
-            if nextMissionCreationDate.replace(tzinfo=None) > local_time_temp.replace(tzinfo=None):
+            if nextMissionCreationDate > current_time_in_deletion_timezone:
                 return Response({'errorMessage': 'Cannot add new mission unless 1 day has passed since you deleted the last mission.'}, 
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -74,7 +72,8 @@ class MissionCreateView(generics.GenericAPIView):
 
                 if serializer.is_valid(raise_exception=True):
                     instance = serializer.save()
-                    instance.startDate = local_time
+                    instance.startDate = datetime.now(pytz.UTC)
+                    instance.startTimezone = current_timezone
                     instance.save()
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -83,7 +82,8 @@ class MissionCreateView(generics.GenericAPIView):
 
             if serializer.is_valid(raise_exception=True):
                 instance = serializer.save()
-                instance.startDate = local_time
+                instance.startDate = datetime.now(pytz.UTC)
+                instance.startTimezone = current_timezone
                 instance.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
     
@@ -121,12 +121,12 @@ class MissionDeleteView(generics.DestroyAPIView):
         user = User.objects.get(id=user_id)
         
         local_time = self.request.data.get("local_time")
-        timezone = self.request.data.get("timezone")
+        current_timezone = self.request.data.get("timezone")
 
-        deletionTime = pytz.timezone(timezone).localize(datetime.fromisoformat(local_time))
+        deletionTime = datetime.now(pytz.UTC)
         try:
             mission = missions.get(id=mission_id)
-            user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime})
+            user_serializer = UserSerializer(user, data={'lastMissionDeletionDate': deletionTime, 'deletionTimezone': current_timezone})
         
             if user_serializer.is_valid(raise_exception=True):
                 user_serializer.save()
@@ -171,16 +171,13 @@ class MissionCompleteView(generics.GenericAPIView):
 
         current_timezone = self.request.data.get("timezone")
         local_time = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
-       
-        local_time_temp = return_local_time(local_time=local_time,
-                                    current_utc_offset=local_time.strftime('%z')[:3],
-                                    mission_start_or_deletion_utc=mission.startDate.strftime("%z")[:3]
-                                    )
+        current_time_in_mission_start_timezone = get_time(mission.startTimezone, datetime.now(pytz.UTC))
         # numberOfDays is not 0
         if mission.prevDate:
-            nextMissionCompletionDate = datetime(year=mission.prevDate.year,
-                                                month=mission.prevDate.month,
-                                                day=mission.prevDate.day+1,
+            prevDate = get_time(mission.startTimezone, mission.prevDate)
+            nextMissionCompletionDate = datetime(year=prevDate.year,
+                                                month=prevDate.month,
+                                                day=prevDate.day+1,
                                                 hour=0,
                                                 minute=0,
                                                 second=0,
@@ -188,13 +185,13 @@ class MissionCompleteView(generics.GenericAPIView):
                                                 )
                 
             # User skipped one or more day for the mission completion
-            if timedelta(days=1, hours=24 - mission.prevDate.hour) < (local_time_temp.replace(tzinfo=None) - (mission.prevDate.replace(tzinfo=None))):
-                mission.delete() #does that actually deletes the mission?
+            if timedelta(days=1, hours=24 - prevDate.hour) < (current_time_in_mission_start_timezone - prevDate):
+                mission.delete()
                 return Response({'errorMessage':'Have not completed the mission more than one day!'}, status=status.HTTP_400_BAD_REQUEST)
                 
             # Previous completion of that mission is not in the same day with this completion request
-            elif nextMissionCompletionDate <= local_time_temp.replace(tzinfo=None):
-                mission.prevDate = local_time_temp
+            elif nextMissionCompletionDate <= current_time_in_mission_start_timezone:
+                mission.prevDate = datetime.now(pytz.UTC)
                 mission.numberOfDays = F('numberOfDays') + 1
 
                 mint_token(user_wallet)
@@ -209,7 +206,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 
         # numberOfDays is 0, because prevDate does not exist.
         else:          
-            mission.prevDate = local_time_temp
+            mission.prevDate = datetime.now(pytz.UTC)
             mission.numberOfDays = F('numberOfDays') + 1
             mission.save()
 

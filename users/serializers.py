@@ -5,7 +5,8 @@ from django.contrib.auth.hashers import make_password
 from datetime import timedelta, datetime
 from modules import return_local_time
 import pytz
-
+from modules import get_time
+from math import ceil
 class ContactFormSerializer(serializers.Serializer):
     gender = serializers.CharField(max_length=10)
     email = serializers.EmailField()
@@ -73,14 +74,14 @@ class MissionListSerializer(serializers.ModelSerializer):
     def get_last_mission_completion_hours(self, obj):
         timezone = self.context['request'].query_params.get('timezone')
         local_time = local_time=pytz.timezone(timezone).localize(datetime.fromisoformat(self.context['request'].query_params.get('local_time')))
-        prevDate = obj.prevDate
+        prevDate = get_time(timezone, obj.prevDate)
 
         if prevDate is None:
             return None
         
-        local_time = return_local_time(local_time=local_time,
-                                       current_utc_offset=local_time.strftime("%z")[:3],
-                                        mission_start_or_deletion_utc=prevDate.strftime("%z")[:3])
+        # local_time = return_local_time(local_time=local_time,
+        #                                current_utc_offset=local_time.strftime("%z")[:3],
+        #                                 mission_start_or_deletion_utc=prevDate.strftime("%z")[:3])
         
         last_mission_completion_hours = datetime(year=prevDate.year,
                                                 month=prevDate.month,
@@ -89,8 +90,8 @@ class MissionListSerializer(serializers.ModelSerializer):
                                                 minute=0,
                                                 second=0,
                                                 microsecond=0
-                                                ) - local_time.replace(tzinfo=None)
-        last_mission_completion_hours = last_mission_completion_hours.total_seconds() / 3600
+                                                ) - datetime.now(pytz.UTC).replace(tzinfo=None)
+        last_mission_completion_hours = ceil(last_mission_completion_hours.total_seconds() / 3600)
         return last_mission_completion_hours
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

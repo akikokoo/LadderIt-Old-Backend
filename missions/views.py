@@ -61,6 +61,7 @@ class MissionCreateView(generics.GenericAPIView):
             deletion_time = get_time(user.deletionTimezone, user.lastMissionDeletionDate)
             nextMissionCreationDate = deletion_time + timedelta(days=1)
             current_time_in_deletion_timezone = get_time(user.deletionTimezone, datetime.now(pytz.UTC))
+
             # Next mission creation date is one day after the last mission deletion date
             # If the user hasn't passed next mission creation date yet he/she cannot create a new mission.
             if nextMissionCreationDate > current_time_in_deletion_timezone:
@@ -171,10 +172,10 @@ class MissionCompleteView(generics.GenericAPIView):
 
         current_timezone = self.request.data.get("timezone")
         local_time = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
-        current_time_in_mission_start_timezone = get_time(mission.startTimezone, datetime.now(pytz.UTC))
+        current_time_in_mission_start_timezone = get_time(mission.startTimezone, datetime.now(pytz.UTC)).replace(tzinfo=None)
         # numberOfDays is not 0
         if mission.prevDate:
-            prevDate = get_time(mission.startTimezone, mission.prevDate)
+            prevDate = get_time(mission.startTimezone, mission.prevDate).replace(tzinfo=None)
             nextMissionCompletionDate = datetime(year=prevDate.year,
                                                 month=prevDate.month,
                                                 day=prevDate.day+1,
@@ -182,8 +183,7 @@ class MissionCompleteView(generics.GenericAPIView):
                                                 minute=0,
                                                 second=0,
                                                 microsecond=0
-                                                ).astimezone(pytz.UTC)
-                
+                                                )
             # User skipped one or more day for the mission completion
             if timedelta(days=1, hours=24 - prevDate.hour) < (current_time_in_mission_start_timezone - prevDate):
                 mission.delete()
@@ -194,7 +194,7 @@ class MissionCompleteView(generics.GenericAPIView):
                 mission.prevDate = datetime.now(pytz.UTC)
                 mission.numberOfDays = F('numberOfDays') + 1
 
-                mint_token(user_wallet)
+                # mint_token(user_wallet)
                     
                 mission.save()
                     

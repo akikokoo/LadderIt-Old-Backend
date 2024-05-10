@@ -10,7 +10,6 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
     # Customize the response data if needed
     def post(self, request, *args, **kwargs):
         # password = request.data.get('password', None)

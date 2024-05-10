@@ -27,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["akikoko.pythonanywhere.com"]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -136,7 +136,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CUSTOM BACKEND
-AUTHENTICATION_BACKENDS = ['users.custom_backend.PasswordBackend']
+AUTHENTICATION_BACKENDS = ['users.custom_backend.Web3Authentication']
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
@@ -145,8 +145,7 @@ REST_FRAMEWORK = {
 
     #AUTHENTICATION AND PERMISSIONS
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'users.custom_backend.Web3Authentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

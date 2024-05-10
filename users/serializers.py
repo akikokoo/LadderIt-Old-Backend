@@ -7,6 +7,7 @@ from modules import return_local_time
 import pytz
 from modules import get_time
 from math import ceil
+from django.utils.crypto import get_random_string
 class ContactFormSerializer(serializers.Serializer):
     gender = serializers.CharField(max_length=10)
     email = serializers.EmailField()
@@ -49,6 +50,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data['password'] = make_password(validated_data['password'])
+
+        referral_code = get_random_string(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        while User.objects.filter(referral_code=referral_code).exists():
+            referral_code = get_random_string(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        validated_data['referral_code'] = referral_code
+
         return super(UserRegisterSerializer, self).create(validated_data)
     
     def to_representation(self, instance):

@@ -11,6 +11,7 @@ class User(AbstractUser):
     lastMissionDeletionDate = models.DateTimeField(null=True, blank=True, max_length=50)
     deletionTimezone = models.CharField(max_length=50, null=True, blank=True) #'America/Los_Angeles'
     isEligibleForReward = models.BooleanField(default=False)
+    referral_code = models.CharField(max_length=6, null=True, blank=True)
     # deviceId = models.CharField(max_length=255, null=True, blank=True) #DEVICE ID OF THE USER
     
     REQUIRED_FIELDS = []

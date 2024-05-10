@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
+from django.contrib.auth.middleware import AuthenticationMiddleware
 #SWAGGER
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -25,6 +25,8 @@ from .serializers import (
 
 # OTHERS
 import string, random
+from .custom_backend import Web3Authentication
+
 
 class RegistrationView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
@@ -40,10 +42,45 @@ class RegistrationView(generics.CreateAPIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class LoginView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'token': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='JWT Token from Lens Protocol'
+                    ),
+                    'public_key': openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description='Public key of the user\'s wallet address'
+                    ),
+                    # Add other properties as needed
+                },
+                required=['token', 'public_key'],
+        ),
+        responses={201: openapi.Response(description='Authenticated Successfully',)}
+    )
+    def post(self, request):
+        user = authenticate(request=self.request)
+
+        if user is not None:
+            message = {
+                "message": "Authenticated Successfully"
+            }
+            return Response(message, status=status.HTTP_200_OK)
+        else:
+            error_dict = {
+                'errorMessage': 'Invalid wallet address',
+            }
+            return Response(error_dict, status=status.HTTP_400_BAD_REQUEST)
 #--------------------------------------------------------------------------------------------------------
 # response.data -> [OrderedDict([('id', 1), ('title', 'Görev 1'), ('prevDate', '2024-01-19T16:00:00Z'), ('numberOfDays', 1), ('isCompleted', True), ('startDate', '2024-01-19T16:00:00Z'), ('category', 'art'), ('last_mission_completion_hours', 32.0)])
 class MissionListView(generics.ListAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [Web3Authentication]
     permission_classes = [IsAuthenticated]
     serializer_class = MissionListSerializer
 
@@ -87,7 +124,7 @@ class UserDetailView(generics.ListAPIView):
 
 
 class ProfileUpdateView(generics.GenericAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [Web3Authentication]
     permission_classes = [IsAuthenticated]
     serializer_class = ProfileUpdateSerializer
 

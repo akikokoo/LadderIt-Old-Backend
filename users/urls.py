@@ -7,10 +7,12 @@ from .views import (
     UserDetailView,
     PasswordResetConfirmView,
     PasswordResetView,
+    LoginView,
 )
 
 urlpatterns = [
-    path("contact/",ContactFormView.as_view(), name="contact-form"),
+    path('contact/',ContactFormView.as_view(), name="contact-form"),
+    path('login/',LoginView.as_view(), name="login"),
     path('register/',RegistrationView.as_view(), name="register"),
     path('user_detail/',UserDetailView.as_view(), name="user-detail"),
     path('mission_list',MissionListView.as_view(), name="mission-list"),

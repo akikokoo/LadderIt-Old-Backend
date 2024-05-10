@@ -1,11 +1,11 @@
 from .models import Mission, User
 from django.db.models import F
+from users.custom_backend import Web3Authentication
 
 #REST_FRAMEWORK
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 #SWAGGER
 from drf_yasg.utils import swagger_auto_schema
@@ -24,7 +24,7 @@ from modules import return_local_time, get_time
 from .mint import mint_token
 
 class MissionCreateView(generics.GenericAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [Web3Authentication]
     permission_classes = [IsAuthenticated]
     serializer_class=MissionCreateSerializer
 
@@ -57,7 +57,6 @@ class MissionCreateView(generics.GenericAPIView):
 
         # Checking if there is any mission deleted before
         if user.lastMissionDeletionDate:
-            # getting local_time in the same timezone with the mission start or deletion date
             deletion_time = get_time(user.deletionTimezone, user.lastMissionDeletionDate)
             nextMissionCreationDate = deletion_time + timedelta(days=1)
             current_time_in_deletion_timezone = get_time(user.deletionTimezone, datetime.now(pytz.UTC))
@@ -91,7 +90,7 @@ class MissionCreateView(generics.GenericAPIView):
 
 
 class MissionDeleteView(generics.DestroyAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [Web3Authentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -140,9 +139,9 @@ class MissionDeleteView(generics.DestroyAPIView):
 
 
 
-#NOT DONE(TOKEN AND NFT MINTING?)
+
 class MissionCompleteView(generics.GenericAPIView):
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [Web3Authentication]
     permission_classes = [IsAuthenticated]
     
     @swagger_auto_schema(
@@ -166,16 +165,17 @@ class MissionCompleteView(generics.GenericAPIView):
     def patch(self, request, *args, **kwargs):
         mission_id = self.kwargs['pk']
         mission = Mission.objects.select_related('user').get(id=mission_id)
-
         user = mission.user
         user_wallet = user.wallet
-
         current_timezone = self.request.data.get("timezone")
         local_time = pytz.timezone(current_timezone).localize(datetime.fromisoformat(self.request.data.get("local_time")))
         current_time_in_mission_start_timezone = get_time(mission.startTimezone, datetime.now(pytz.UTC)).replace(tzinfo=None)
+
         # numberOfDays is not 0
         if mission.prevDate:
             prevDate = get_time(mission.startTimezone, mission.prevDate).replace(tzinfo=None)
+            print(prevDate)
+            print(prevDate.hour)
             nextMissionCompletionDate = datetime(year=prevDate.year,
                                                 month=prevDate.month,
                                                 day=prevDate.day+1,
@@ -184,6 +184,7 @@ class MissionCompleteView(generics.GenericAPIView):
                                                 second=0,
                                                 microsecond=0
                                                 )
+            
             # User skipped one or more day for the mission completion
             if timedelta(days=1, hours=24 - prevDate.hour) < (current_time_in_mission_start_timezone - prevDate):
                 mission.delete()
@@ -192,11 +193,9 @@ class MissionCompleteView(generics.GenericAPIView):
             # Previous completion of that mission is not in the same day with this completion request
             elif nextMissionCompletionDate <= current_time_in_mission_start_timezone:
                 mission.prevDate = datetime.now(pytz.UTC)
-                mission.numberOfDays = F('numberOfDays') + 1
-
-                # mint_token(user_wallet)
-                    
+                mission.numberOfDays = F('numberOfDays') + 1                  
                 mission.save()
+                #mint_token(user_wallet)
                     
                 return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
                 
@@ -211,30 +210,3 @@ class MissionCompleteView(generics.GenericAPIView):
             mission.save()
 
             return Response({'message':'Completed the mission successfully!'}, status=status.HTTP_200_OK)
-    
-        
-# class ChangeIsCompleteView(generics.GenericAPIView):
-#     authentication_classes = [JWTAuthentication]
-#     permission_classes = [IsAuthenticated]
-
-#     def patch(self, request, *args, **kwargs):
-#         user = User.objects.get(id = self.request.user.id)
-#         #updating every isCompleted to False for every mission for that user
-#         missions = Mission.objects.filter(user=user)
-
-#         for mission in missions:
-            
-#             mission.isCompleted = False
-#             mission.save()
-
-#         return Response({"message":"Resetted missions correctly"}, status=status.HTTP_200_OK)
-
-#     @classmethod
-#     def as_view(cls, **initkwargs):
-#         view = super(ChangeIsCompleteView, cls).as_view(**initkwargs)
-        
-#         # Apply swagger_auto_schema to the post method
-#         view.post = swagger_auto_schema(
-#             request_body=None, method="patch")
-
-#         return view
